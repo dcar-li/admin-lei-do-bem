@@ -700,7 +700,7 @@ async function updateMcti(slug,sel){
 
 // ===================== WIZARD NOVO PROJETO =====================
 function initWizard(){
-  wiz={step:1,nome:"",anoBase:new Date().getFullYear()+"",empresaSlug:"",parceiroSlug:allParceiros.length?allParceiros[0].slug:"",etapas:[],emails:[]};
+  wiz={step:1,nome:"",anoBase:new Date().getFullYear()+"",empresaSlug:"",parceiroSlug:allParceiros.length?allParceiros[0].slug:"",etapas:[],emails:[],_empresaManual:false};
   renderWizard();
 }
 
@@ -738,7 +738,7 @@ function renderStep1(pane,footer){
     '<div class="wiz-grid">'+
       '<div class="wiz-field">'+
         '<label class="field-label">Empresa slug</label>'+
-        '<input class="field-input" id="wiz-empresa" placeholder="Preenchido automaticamente" value="'+wiz.empresaSlug+'"/>'+
+        '<input class="field-input" id="wiz-empresa" placeholder="Preenchido automaticamente" value="'+wiz.empresaSlug+'" oninput="wiz._empresaManual=true"/>'+
         '<div style="font-size:11px;color:var(--text-hint);margin-top:3px;font-weight:500">Usado para vincular anos ao histórico</div>'+
       '</div>'+
       '<div class="wiz-field">'+
@@ -769,9 +769,12 @@ function onWizIdentInput(){
 
   var slug=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+ano;
 
-  // Auto-preenche empresa slug se ainda vazio
-  if(empEl&&!empEl.value){
-    empEl.value=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+  // Auto-preenche empresa slug sempre que nome mudar (se não foi editado manualmente)
+  if(empEl){
+    var slugEmpresa=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+    // Só sobrescreve se estiver vazio ou se ainda bate com um slug gerado automaticamente
+    var anterior=wiz._empresaManual;
+    if(!anterior) empEl.value=slugEmpresa;
   }
 
   var existe=allClientes.find(function(c){return c.slug===slug;});
