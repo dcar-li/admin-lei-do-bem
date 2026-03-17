@@ -547,9 +547,11 @@ async function loadClient(){
         periodoHTML+='</div>';
         var card=document.createElement("div");
         card.className="stage-card";
-        var ativHtml=ea.map(function(t){var tc=sc(t.status);return '<div class="item-row"><div class="item-dot" style="background:'+tc.dot+'"></div><span class="item-name">'+t.nome+'</span><select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)"><option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option><option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option></select></div>';}).join("");
+        var ativHtml=ea.map(function(t){var tc=sc(t.status);return '<div class="item-row"><div class="item-dot" style="background:'+tc.dot+'"></div><span class="item-name">'+t.nome+'</span><select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)"><option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option><option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option></select><button onclick="deleteItem('+t.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button></div>';}).join("");
+        var addAtivBtn='<button class="add-dashed" id="add-btn-'+etapa.id+'-atividade" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'atividade\',\''+slug+'\')">+ atividade</button>';
         var docHtml="";
-        if(ed.length){docHtml='<div class="section-label">Documentos</div>'+ed.map(function(d){var dc=sc(d.status);var dlB=d.arquivo_url?'<span class="dl-badge">Template ↓</span>':"";return '<div class="item-row"><div class="item-dot" style="background:'+dc.dot+'"></div><span class="item-name">'+d.nome+'</span>'+dlB+'<select class="status-select '+d.status+'" onchange="updateStatus(\'itens\','+d.id+',this)"><option value="pending"'+(d.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(d.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(d.status==="done"?" selected":"")+'>Recebido</option><option value="delayed"'+(d.status==="delayed"?" selected":"")+'>Em atraso</option></select></div>';}).join("");}
+        if(ed.length){docHtml='<div class="section-label">Documentos</div>'+ed.map(function(d){var dc=sc(d.status);var dlB=d.arquivo_url?'<span class="dl-badge">Template ↓</span>':"";return '<div class="item-row"><div class="item-dot" style="background:'+dc.dot+'"></div><span class="item-name">'+d.nome+'</span>'+dlB+'<select class="status-select '+d.status+'" onchange="updateStatus(\'itens\','+d.id+',this)"><option value="pending"'+(d.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(d.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(d.status==="done"?" selected":"")+'>Recebido</option><option value="delayed"'+(d.status==="delayed"?" selected":"")+'>Em atraso</option></select><button onclick="deleteItem('+d.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button></div>';}).join("");}
+        var addDocBtn='<button class="add-dashed" id="add-btn-'+etapa.id+'-documento" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'documento\',\''+slug+'\')">+ documento</button>';
         card.innerHTML='<div class="stage-header" onclick="toggleStage(\''+si+'-'+gk+'\')">'+
           '<div class="stage-num" style="background:'+col.bg+';color:'+col.text+'">'+String(si+1).padStart(2,"0")+'</div>'+
           '<div class="stage-info"><div class="stage-name">'+etapa.nome+'</div></div>'+
@@ -558,7 +560,7 @@ async function loadClient(){
           '<span class="chev" id="chev-'+si+'-'+gk+'">▼</span>'+
           '</div>'+
           '<div class="stage-body'+(autoOpen?" open":"")+'" id="body-'+si+'-'+gk+'">'+
-          '<div class="stage-inner"><div class="section-label">Atividades</div>'+ativHtml+docHtml+
+          '<div class="stage-inner"><div class="section-label">Atividades</div>'+ativHtml+addAtivBtn+docHtml+(ed.length?addDocBtn:'<div class="section-label" style="margin-top:10px">Documentos</div>'+addDocBtn)+
           '<div class="note-row"><div class="note-label">Observação</div><textarea class="note-input" placeholder="Observação visível ao cliente..." onblur="updateNote('+etapa.id+',this)">'+(etapa.observacao||"")+'</textarea></div>'+
           '</div></div>';
         stCont.appendChild(card);
@@ -815,29 +817,62 @@ async function copiarDeExistente(){
   }catch(e){alert("Erro ao copiar: "+e.message);}
 }
 
-function goStep3(){
+async function goStep3(){
   if(!wiz.etapas.length){alert("Adicione pelo menos uma etapa.");return;}
-  wiz.step=3; renderWizard();
+  wiz.step=3;
+  // Carrega e-mails existentes do parceiro
+  try{
+    var existentes=await api("/rest/v1/emails_permitidos?parceiro_slug=eq."+wiz.parceiroSlug+"&select=id,email,cliente_slug&order=email.asc");
+    wiz.emailsExistentes=existentes||[];
+  }catch(e){wiz.emailsExistentes=[];}
+  renderWizard();
 }
 
 function renderStep3(pane,footer){
-  var emailRows=wiz.emails.map(function(e,i){
+  // E-mails a adicionar neste projeto
+  var novosRows=wiz.emails.map(function(e,i){
     return '<div class="wiz-email">'+
       '<div class="wiz-email-val">'+e.email+'</div>'+
-      '<span class="wiz-email-parc">'+e.parceiro+'</span>'+
+      '<span class="wiz-email-parc" style="background:var(--green-light);color:var(--green)">Novo</span>'+
       '<button class="wiz-email-del" onclick="removeEmail('+i+')">✕</button>'+
+    '</div>';
+  }).join("");
+
+  // E-mails já cadastrados no parceiro
+  var existentesRows=(wiz.emailsExistentes||[]).map(function(e){
+    var clienteNome=allClientes.find(function(c){return c.slug===e.cliente_slug;});
+    var clienteLabel=clienteNome?clienteNome.nome:e.cliente_slug;
+    var jaVinculado=wiz.emails.find(function(n){return n.email===e.email;});
+    return '<div class="wiz-email" style="opacity:'+(jaVinculado?0.4:1)+'">'+
+      '<div class="wiz-email-val">'+e.email+'</div>'+
+      '<span class="wiz-email-parc">'+clienteLabel+'</span>'+
+      (jaVinculado?
+        '<span style="font-size:10px;color:var(--green);font-weight:600">já adicionado</span>':
+        '<button class="btn-add-small" style="padding:2px 8px;font-size:10px" onclick="addEmailExistente(\''+e.email+'\')">+ Vincular</button>'
+      )+
     '</div>';
   }).join("");
 
   pane.innerHTML='<div class="wizard-pane">'+
     '<div class="wizard-title">Acessos ao portal</div>'+
-    '<div class="wizard-sub">Adicione os e-mails que terão acesso ao cronograma deste cliente.</div>'+
-    '<div class="wiz-email-list" id="wiz-email-list">'+emailRows+'</div>'+
-    '<div class="wiz-add-email-row">'+
-      '<input class="field-input" id="new-email" type="email" placeholder="email@empresa.com"/>'+
+    '<div class="wizard-sub">Gerencie os e-mails com acesso ao portal do parceiro <strong>'+wiz.parceiroSlug+'</strong>.</div>'+
+
+    '<div class="section-label" style="margin-top:0">E-mails para este projeto</div>'+
+    (wiz.emails.length?
+      '<div class="wiz-email-list">'+novosRows+'</div>':
+      '<div style="font-size:12px;color:var(--text-hint);padding:6px 0 10px;font-weight:500">Nenhum e-mail adicionado ainda.</div>'
+    )+
+    '<div class="wiz-add-email-row" style="margin-bottom:20px">'+
+      '<input class="field-input" id="new-email" type="email" placeholder="email@empresa.com" onkeydown="if(event.key===\'Enter\')addEmailWiz()"/>'+
       '<button class="btn-add-small" onclick="addEmailWiz()">+ Adicionar</button>'+
     '</div>'+
-    '<div style="font-size:11px;color:var(--text-hint);margin-top:8px;font-weight:500">O parceiro será "'+wiz.parceiroSlug+'" para todos os e-mails adicionados.</div>'+
+
+    ((wiz.emailsExistentes||[]).length?
+      '<div class="section-label">E-mails já cadastrados neste parceiro</div>'+
+      '<div class="info-box" style="margin-bottom:8px">Estes e-mails já têm acesso ao portal. Clique em "Vincular" para dar acesso também a este novo projeto.</div>'+
+      '<div class="wiz-email-list">'+existentesRows+'</div>':
+      ''
+    )+
   '</div>';
 
   footer.innerHTML='<button class="btn-back" onclick="wiz.step=2;renderWizard()">← Voltar</button><div style="font-size:12px;color:var(--text-hint);font-weight:500">Passo 3 de 4</div><button class="btn-next" onclick="wiz.step=4;renderWizard()">Próximo: Revisar →</button>';
@@ -847,6 +882,12 @@ function addEmailWiz(){
   var email=document.getElementById("new-email").value.trim();
   if(!email||!email.includes("@")){alert("Informe um e-mail válido.");return;}
   if(wiz.emails.find(function(e){return e.email===email;})){alert("E-mail já adicionado.");return;}
+  wiz.emails.push({email:email,parceiro:wiz.parceiroSlug});
+  renderWizard();
+}
+
+function addEmailExistente(email){
+  if(wiz.emails.find(function(e){return e.email===email;})){return;}
   wiz.emails.push({email:email,parceiro:wiz.parceiroSlug});
   renderWizard();
 }
@@ -886,6 +927,41 @@ function renderStep4(pane,footer){
   footer.innerHTML='<button class="btn-back" onclick="wiz.step=3;renderWizard()">← Voltar</button><div style="font-size:12px;color:var(--text-hint);font-weight:500">Passo 4 de 4</div><button class="btn-create" id="btn-create-final" onclick="criarProjeto()">Criar projeto</button>';
 }
 
+// TEMPLATE PADRÃO DE ATIVIDADES POR GRUPO
+var TEMPLATE_ITENS = {
+  contabil: {
+    atividades: [
+      "Cálculo dos dispêndios segundo a análise de risco",
+      "Apresentação de resultado"
+    ],
+    documentos: []
+  },
+  tecnico: {
+    atividades: [
+      "Recebimento das informações técnicas dos projetos",
+      "Levantamento das NFs e timesheet dos projetos",
+      "Coleta dos dados de RH",
+      "Levantamento de contratos"
+    ],
+    documentos: [
+      {nome:"Template de projeto", tem_template:true},
+      {nome:"Timesheet dos projetos", tem_template:true},
+      {nome:"Folha de pagamento", tem_template:false},
+      {nome:"Contratos e demais evidências", tem_template:false}
+    ]
+  },
+  mcti: {
+    atividades: [
+      "Coleta dos dados de fechamento contábil do ano-base",
+      "Preenchimento do formulário MCTI",
+      "Envio e protocolo de confirmação"
+    ],
+    documentos: [
+      {nome:"Comprovante de envio ao MCTI", tem_template:false}
+    ]
+  }
+};
+
 async function criarProjeto(){
   var btn=document.getElementById("btn-create-final");
   var result=document.getElementById("create-result");
@@ -895,10 +971,22 @@ async function criarProjeto(){
   try{
     // 1. Criar cliente
     await api("/rest/v1/clientes","POST",{nome:nomeCompleto,ano_base:parseInt(wiz.anoBase),slug:slug,empresa_slug:wiz.empresaSlug});
-    // 2. Criar etapas
+    // 2. Criar etapas + atividades/documentos do template
     for(var i=0;i<wiz.etapas.length;i++){
       var e=wiz.etapas[i];
-      await api("/rest/v1/etapas","POST",{cliente_slug:slug,ordem:i+1,nome:e.nome,periodo:e.periodo,status:"pending",grupo:e.grupo,observacao:""});
+      var etapaRes=await api("/rest/v1/etapas","POST",{cliente_slug:slug,ordem:i+1,nome:e.nome,periodo:e.periodo,status:"pending",grupo:e.grupo,observacao:""});
+      var etapaId=etapaRes&&etapaRes[0]?etapaRes[0].id:null;
+      if(!etapaId) continue;
+      var tpl=TEMPLATE_ITENS[e.grupo];
+      if(!tpl) continue;
+      // Atividades
+      for(var a=0;a<tpl.atividades.length;a++){
+        await api("/rest/v1/itens","POST",{cliente_slug:slug,etapa_id:etapaId,tipo:"atividade",nome:tpl.atividades[a],status:"pending",ordem:a+1,arquivo_url:null});
+      }
+      // Documentos
+      for(var d=0;d<tpl.documentos.length;d++){
+        await api("/rest/v1/itens","POST",{cliente_slug:slug,etapa_id:etapaId,tipo:"documento",nome:tpl.documentos[d].nome,status:"pending",ordem:d+1,arquivo_url:null});
+      }
     }
     // 3. Criar status_mcti
     await api("/rest/v1/status_mcti","POST",{cliente_slug:slug,status:"nao_enviado"});
@@ -907,15 +995,78 @@ async function criarProjeto(){
       var em=wiz.emails[j];
       await api("/rest/v1/emails_permitidos","POST",{email:em.email,cliente_slug:slug,parceiro_slug:em.parceiro});
     }
-    // 5. Recarregar lista de clientes
+    // 5. Recarregar lista
     await loadAllClientes();
-    result.innerHTML='<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso! Acesse a aba Cronogramas para adicionar atividades e documentos.</div>';
+    result.innerHTML='<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso com template de atividades! Acesse a aba Cronogramas para editar.</div>';
     btn.textContent="Criado ✓";
     setTimeout(function(){switchTab("cronograma");var sel=document.getElementById("client-select");sel.value=slug;loadClient();},2000);
   }catch(e){
     result.innerHTML='<div class="error-box">Erro ao criar: '+e.message+'</div>';
     btn.disabled=false;btn.textContent="Tentar novamente";
   }
+}
+    result.innerHTML='<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso com template de atividades! Acesse a aba Cronogramas para editar.</div>';
+    btn.textContent="Criado ✓";
+    setTimeout(function(){switchTab("cronograma");var sel=document.getElementById("client-select");sel.value=slug;loadClient();},2000);
+  }catch(e){
+    result.innerHTML='<div class="error-box">Erro ao criar: '+e.message+'</div>';
+    btn.disabled=false;btn.textContent="Tentar novamente";
+  }
+}
+
+// ===== EDIÇÃO DE ATIVIDADES NA ABA CRONOGRAMAS =====
+
+var currentClienteSlugEdit = null;
+
+function showAddItemForm(etapaId, tipo, clienteSlug){
+  var formId = "add-form-"+etapaId+"-"+tipo;
+  var existing = document.getElementById(formId);
+  if(existing){ existing.remove(); return; }
+  currentClienteSlugEdit = clienteSlug;
+  var label = tipo==="atividade" ? "Nova atividade" : "Novo documento";
+  var placeholder = tipo==="atividade" ? "ex: Cálculo dos dispêndios" : "ex: Folha de pagamento";
+  var form = document.createElement("div");
+  form.id = formId;
+  form.style.cssText = "display:flex;gap:8px;margin-top:6px;margin-bottom:4px;align-items:center";
+  form.innerHTML =
+    '<input class="field-input" style="flex:1;font-size:12px;padding:6px 10px" placeholder="'+placeholder+'" id="ni-nome-'+etapaId+'"/>'+
+    (tipo==="documento"?'<input class="field-input" style="width:160px;font-size:12px;padding:6px 10px" placeholder="URL template (opcional)" id="ni-url-'+etapaId+'"/>':'')+
+    '<button class="btn-add-small" style="white-space:nowrap" onclick="saveNewItem('+etapaId+',\''+tipo+'\',\''+clienteSlug+'\')">Salvar</button>'+
+    '<button onclick="document.getElementById(\''+formId+'\').remove()" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:16px;padding:0 4px">✕</button>';
+  // Insere após o último item da seção
+  var sectionEnd = document.getElementById("add-btn-"+etapaId+"-"+tipo);
+  if(sectionEnd) sectionEnd.before(form);
+}
+
+async function saveNewItem(etapaId, tipo, clienteSlug){
+  var nomeEl = document.getElementById("ni-nome-"+etapaId);
+  var urlEl  = document.getElementById("ni-url-"+etapaId);
+  var nome = nomeEl ? nomeEl.value.trim() : "";
+  var url  = urlEl  ? urlEl.value.trim()  : null;
+  if(!nome){alert("Informe o nome.");return;}
+  showSave("saving");
+  try{
+    await api("/rest/v1/itens","POST",{
+      cliente_slug:clienteSlug, etapa_id:etapaId,
+      tipo:tipo, nome:nome, status:"pending", ordem:99,
+      arquivo_url:url||null
+    });
+    showSave("saved");
+    // Recarrega cronograma do cliente atual
+    var sel = document.getElementById("client-select");
+    if(sel && sel.value) loadClient();
+  }catch(e){ showSave("error"); alert("Erro: "+e.message); }
+}
+
+async function deleteItem(itemId){
+  if(!confirm("Remover este item?")) return;
+  showSave("saving");
+  try{
+    await api("/rest/v1/itens?id=eq."+itemId,"DELETE");
+    showSave("saved");
+    var sel = document.getElementById("client-select");
+    if(sel && sel.value) loadClient();
+  }catch(e){ showSave("error"); alert("Erro: "+e.message); }
 }
 </script>
 </body>
