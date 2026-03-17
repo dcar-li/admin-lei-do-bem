@@ -1005,14 +1005,6 @@ async function criarProjeto(){
     btn.disabled=false;btn.textContent="Tentar novamente";
   }
 }
-    result.innerHTML='<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso com template de atividades! Acesse a aba Cronogramas para editar.</div>';
-    btn.textContent="Criado ✓";
-    setTimeout(function(){switchTab("cronograma");var sel=document.getElementById("client-select");sel.value=slug;loadClient();},2000);
-  }catch(e){
-    result.innerHTML='<div class="error-box">Erro ao criar: '+e.message+'</div>';
-    btn.disabled=false;btn.textContent="Tentar novamente";
-  }
-}
 
 // ===== EDIÇÃO DE ATIVIDADES NA ABA CRONOGRAMAS =====
 
