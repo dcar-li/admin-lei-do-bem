@@ -4,120 +4,162 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Admin — Cronogramas Lei do Bem</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
+  --dcarli:#CCD650;--dcarli-dark:#1a1f0e;--dcarli-text:#8a9118;--dcarli-light:#f5f7d9;
   --blue:#185FA5;--blue-light:#E6F1FB;--blue-mid:#378ADD;
   --green:#3B6D11;--green-light:#EAF3DE;--green-mid:#639922;
   --amber:#BA7517;--amber-light:#FAEEDA;
   --red:#A32D2D;--red-light:#FCEBEB;--red-mid:#E24B4A;
   --gray:#5F5E5A;--gray-light:#F1EFE8;--gray-mid:#B4B2A9;
-  --teal:#0F6E56;
   --text:#1a1a18;--text-sec:#6b6b67;--text-hint:#9e9e9a;
   --bg:#f7f6f2;--surface:#ffffff;--border:#e2e1db;
   --radius:10px;--radius-lg:14px;
-  font-family:'DM Sans',sans-serif;
+  font-family:'Quicksand',sans-serif;
 }
-body{background:var(--bg);color:var(--text);min-height:100vh}
+body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Quicksand',sans-serif}
 
-.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2.5rem;width:100%;max-width:360px}
-.login-logo{width:40px;height:40px;background:var(--blue);border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:1.5rem}
-.login-logo svg{width:22px;height:22px}
-.login-title{font-size:18px;font-weight:600;color:var(--text);margin-bottom:4px}
-.login-sub{font-size:13px;color:var(--text-sec);margin-bottom:1.5rem}
-.login-label{font-size:12px;font-weight:500;color:var(--text-sec);margin-bottom:5px;display:block}
-.login-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;margin-bottom:12px}
-.login-input:focus{outline:none;border-color:var(--blue-mid)}
-.login-btn{width:100%;padding:10px;background:var(--blue);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:opacity .15s}
+.login-wrap{min-height:100vh;background:var(--dcarli-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden}
+.login-circle{position:absolute;border-radius:50%;border:1px solid rgba(204,214,80,0.08)}
+.login-card{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:360px;position:relative;z-index:1}
+.login-logo{text-align:center;margin-bottom:1.5rem}
+.login-logo img{height:40px;object-fit:contain}
+.login-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;text-align:center}
+.login-sub{font-size:13px;color:var(--text-sec);margin-bottom:1.5rem;text-align:center;font-weight:500}
+.login-label{font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:5px;display:block}
+.login-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:'Quicksand',sans-serif;margin-bottom:12px;font-weight:500}
+.login-input:focus{outline:none;border-color:var(--dcarli)}
+.login-btn{width:100%;padding:10px;background:var(--dcarli);color:var(--dcarli-dark);border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:'Quicksand',sans-serif}
 .login-btn:hover{opacity:.9}
 .login-btn:disabled{opacity:.5;cursor:not-allowed}
-.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none}
+.login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;font-weight:500}
+.login-footer{margin-top:1.5rem;text-align:center;position:relative;z-index:1}
+.login-footer span{font-size:11px;color:rgba(204,214,80,0.4);font-weight:600}
 
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:60px;position:sticky;top:0;z-index:100}
-.logo{display:flex;align-items:center;gap:10px}
-.logo-mark{width:32px;height:32px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center}
-.logo-mark svg{width:18px;height:18px}
-.logo-name{font-size:14px;font-weight:600;color:var(--text);letter-spacing:-.3px}
-.logo-sub{font-size:11px;color:var(--text-sec);font-family:'DM Mono',monospace;margin-top:1px}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.admin-badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;background:var(--amber-light);color:var(--amber);border:1px solid #FAC775}
-.logout-btn{font-size:12px;padding:5px 12px;border:1px solid var(--border);border-radius:var(--radius);background:transparent;color:var(--text-sec);cursor:pointer;font-family:'DM Sans',sans-serif}
-.logout-btn:hover{background:var(--gray-light)}
+.topbar{background:var(--dcarli-dark);border-bottom:2px solid var(--dcarli);padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:56px;position:sticky;top:0;z-index:100}
+.logo-wrap{display:flex;align-items:center;gap:12px}
+.logo-img{height:28px;object-fit:contain}
+.logo-divider{width:1px;height:20px;background:rgba(255,255,255,0.15)}
+.logo-name{font-size:13px;font-weight:700;color:#fff}
+.logo-sub{font-size:10px;color:rgba(204,214,80,0.5);font-weight:600;margin-top:1px}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.admin-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:99px;background:rgba(204,214,80,0.12);color:var(--dcarli);border:1px solid rgba(204,214,80,0.25)}
+.logout-btn{font-size:11px;font-weight:600;padding:4px 12px;border:1px solid rgba(255,255,255,0.15);border-radius:6px;background:transparent;color:rgba(255,255,255,0.6);cursor:pointer;font-family:'Quicksand',sans-serif}
+.logout-btn:hover{background:rgba(255,255,255,0.08)}
 
-.page{max-width:860px;margin:0 auto;padding:2rem 1.5rem 4rem}
-.client-selector{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem 1.5rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.client-selector label{font-size:13px;font-weight:500;color:var(--text-sec);white-space:nowrap}
-.client-selector select{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;cursor:pointer}
-.client-selector select:focus{outline:none;border-color:var(--blue-mid)}
-.save-indicator{font-size:12px;color:var(--text-hint);font-family:'DM Mono',monospace;margin-left:auto}
+.tabs{background:var(--surface);border-bottom:1px solid var(--border);padding:0 2rem;display:flex;gap:0}
+.tab{font-size:13px;font-weight:600;padding:12px 16px;cursor:pointer;color:var(--text-hint);border-bottom:2px solid transparent;border-top:none;border-left:none;border-right:none;background:none;font-family:'Quicksand',sans-serif;transition:all .15s}
+.tab:hover{color:var(--text-sec)}
+.tab.active{color:var(--dcarli-text);border-bottom-color:var(--dcarli)}
+
+.page{max-width:900px;margin:0 auto;padding:2rem 1.5rem 4rem}
+
+.selector-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.selector-bar label{font-size:13px;font-weight:600;color:var(--text-sec);white-space:nowrap}
+.selector-bar select{flex:1;min-width:200px;padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);font-family:'Quicksand',sans-serif;cursor:pointer;font-weight:500}
+.selector-bar select:focus{outline:none;border-color:var(--dcarli)}
+.save-indicator{font-size:11px;color:var(--text-hint);font-weight:600;margin-left:auto}
 .save-indicator.saving{color:var(--amber)}
 .save-indicator.saved{color:var(--green)}
 
 .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:1.5rem}
 .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px}
-.metric-label{font-size:11px;color:var(--text-hint);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
-.metric-value{font-size:22px;font-weight:600;color:var(--text);letter-spacing:-.5px}
-.metric-sub{font-size:12px;color:var(--text-sec);margin-top:2px}
+.metric-label{font-size:10px;color:var(--text-hint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;font-weight:700}
+.metric-value{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.5px}
+.metric-sub{font-size:12px;color:var(--text-sec);margin-top:2px;font-weight:500}
 .progress-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;margin-bottom:1.5rem}
 .progress-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-.progress-head span{font-size:13px;font-weight:500;color:var(--text)}
-.progress-pct{font-size:13px;font-weight:600;color:var(--blue);font-family:'DM Mono',monospace}
+.progress-head span{font-size:13px;font-weight:600;color:var(--text)}
+.progress-pct{font-size:13px;font-weight:700;color:var(--dcarli-text)}
 .track{height:8px;background:var(--gray-light);border-radius:99px;overflow:hidden}
-.fill{height:100%;background:linear-gradient(90deg,var(--blue-mid),var(--teal));border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+.fill{height:100%;background:linear-gradient(90deg,var(--dcarli),var(--dcarli-text));border-radius:99px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 
-.stages{display:flex;flex-direction:column;gap:8px}
+.mcti-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:.875rem 1.25rem;margin-bottom:8px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.mcti-bar label{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;min-width:200px}
+.mcti-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.mcti-select{flex:1;min-width:220px;padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:13px;background:var(--bg);color:var(--text);font-family:'Quicksand',sans-serif;cursor:pointer;font-weight:500}
+.mcti-select:focus{outline:none;border-color:var(--dcarli)}
+
+.grupo-section{margin-bottom:1.5rem}
+.grupo-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding-bottom:8px;border-bottom:2px solid var(--border)}
+.grupo-icon{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.grupo-label{font-size:13px;font-weight:700;color:var(--text)}
+.grupo-sub{font-size:11px;color:var(--text-hint);font-weight:500}
+.grupo-pct{font-size:11px;font-weight:700;margin-left:auto;padding:2px 8px;border-radius:99px;background:var(--gray-light);color:var(--gray)}
+
+.stages{display:flex;flex-direction:column;gap:6px}
 .stage-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
-.stage-header{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;user-select:none}
-.stage-num{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;font-family:'DM Mono',monospace}
+.stage-header{display:flex;align-items:center;gap:12px;padding:12px 16px;cursor:pointer;user-select:none}
+.stage-num{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
 .stage-info{flex:1;min-width:0}
-.stage-name{font-size:14px;font-weight:500;color:var(--text)}
-.stage-date{font-size:12px;color:var(--text-hint);margin-top:1px;font-family:'DM Mono',monospace}
-.badge{font-size:11px;font-weight:500;padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
-.chev{font-size:11px;color:var(--text-hint);transition:transform .2s;flex-shrink:0;margin-left:4px}
+.stage-name{font-size:13px;font-weight:600;color:var(--text)}
+.stage-date{font-size:11px;color:var(--text-hint);margin-top:1px;font-weight:500}
+.badge{font-size:11px;font-weight:600;padding:3px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+.chev{font-size:10px;color:var(--text-hint);transition:transform .2s;flex-shrink:0;margin-left:4px}
 .stage-body{max-height:0;overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1)}
-.stage-body.open{max-height:1200px}
-.stage-inner{padding:0 16px 16px;border-top:1px solid var(--border)}
-.section-label{font-size:11px;font-weight:500;color:var(--text-hint);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;margin:14px 0 8px}
-.item-row{display:flex;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:5px;background:var(--bg)}
-.item-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
-.item-name{flex:1;font-size:13px;color:var(--text)}
-.status-select{font-size:12px;font-weight:500;padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .15s;min-width:130px}
+.stage-body.open{max-height:1400px}
+.stage-inner{padding:0 16px 14px;border-top:1px solid var(--border)}
+.section-label{font-size:10px;font-weight:700;color:var(--text-hint);text-transform:uppercase;letter-spacing:.6px;margin:12px 0 7px}
+.item-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:4px;background:var(--bg)}
+.item-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.item-name{flex:1;font-size:12px;color:var(--text);font-weight:500}
+.status-select{font-size:11px;font-weight:600;padding:4px 8px;border-radius:6px;border:1px solid var(--border);font-family:'Quicksand',sans-serif;cursor:pointer;min-width:130px}
 .status-select:focus{outline:none}
 .status-select.pending{background:var(--gray-light);color:var(--gray);border-color:var(--gray-mid)}
 .status-select.in-progress{background:var(--blue-light);color:var(--blue);border-color:#B5D4F4}
 .status-select.done{background:var(--green-light);color:var(--green);border-color:#C0DD97}
 .status-select.delayed{background:var(--red-light);color:var(--red);border-color:#F09595}
 .note-row{margin-top:10px}
-.note-label{font-size:11px;font-weight:500;color:var(--text-hint);text-transform:uppercase;letter-spacing:.6px;font-family:'DM Mono',monospace;margin-bottom:6px}
-.note-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;background:var(--surface);color:var(--text);font-family:'DM Sans',sans-serif;resize:vertical;min-height:60px}
-.note-input:focus{outline:none;border-color:var(--blue-mid)}
+.note-label{font-size:10px;font-weight:700;color:var(--text-hint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.note-input{width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:8px;font-size:12px;background:var(--surface);color:var(--text);font-family:'Quicksand',sans-serif;resize:vertical;min-height:56px;font-weight:500}
+.note-input:focus{outline:none;border-color:var(--dcarli)}
+.dl-badge{font-size:10px;font-weight:600;padding:2px 8px;border-radius:99px;background:var(--dcarli-light);color:var(--dcarli-text);border:1px solid #d4dc6a;white-space:nowrap}
+
+.hist-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;margin-bottom:1rem}
+.hist-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem}
+.hist-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.hist-card-year{font-size:16px;font-weight:700;color:var(--text)}
+.hist-card-del{font-size:11px;font-weight:600;color:var(--red);cursor:pointer;padding:2px 8px;border-radius:6px;border:1px solid var(--red-light);background:var(--red-light);font-family:'Quicksand',sans-serif}
+.hist-card-del:hover{background:#F7C1C1}
+.hist-field{margin-bottom:10px}
+.hist-field label{font-size:10px;font-weight:700;color:var(--text-hint);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:4px}
+.hist-field input{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:'Quicksand',sans-serif;font-weight:600;color:var(--text);background:var(--bg)}
+.hist-field input:focus{outline:none;border-color:var(--dcarli)}
+.hist-preview{font-size:11px;color:var(--text-hint);font-weight:500;margin-top:2px}
+.hist-add-btn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px;border:1.5px dashed var(--border);border-radius:var(--radius-lg);font-size:13px;font-weight:600;color:var(--text-hint);cursor:pointer;background:transparent;font-family:'Quicksand',sans-serif;transition:all .15s}
+.hist-add-btn:hover{border-color:var(--dcarli);color:var(--dcarli-text);background:var(--dcarli-light)}
+
+.info-box{background:var(--blue-light);border:1px solid #B5D4F4;border-radius:var(--radius);padding:10px 14px;font-size:12px;color:var(--blue);margin-bottom:1rem;font-weight:500}
 .loading{text-align:center;padding:3rem;color:var(--text-hint);font-size:14px}
 .loading-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--gray-mid);margin:0 2px;animation:pulse 1.2s ease-in-out infinite}
 .loading-dot:nth-child(2){animation-delay:.2s}
 .loading-dot:nth-child(3){animation-delay:.4s}
 @keyframes pulse{0%,80%,100%{opacity:.3}40%{opacity:1}}
-.error-box{background:#FCEBEB;border:1px solid #F09595;border-radius:var(--radius);padding:14px 16px;font-size:13px;color:#A32D2D;margin:2rem 0}
-.empty{text-align:center;padding:3rem;color:var(--text-hint);font-size:14px}
+.error-box{background:var(--red-light);border:1px solid #F09595;border-radius:var(--radius);padding:14px 16px;font-size:13px;color:var(--red);font-weight:500}
+.empty{text-align:center;padding:3rem;color:var(--text-hint);font-size:14px;font-weight:500}
 @media(max-width:600px){
   .metrics{grid-template-columns:1fr 1fr}
   .topbar{padding:0 1rem}
   .page{padding:1.25rem 1rem 3rem}
-  .client-selector{flex-direction:column;align-items:stretch}
+  .selector-bar{flex-direction:column;align-items:stretch}
 }
 </style>
 </head>
 <body>
 
-<!-- Tela de login -->
+<!-- LOGIN -->
 <div class="login-wrap" id="login-screen">
+  <div class="login-circle" style="width:320px;height:320px;top:-80px;right:-80px"></div>
+  <div class="login-circle" style="width:380px;height:380px;bottom:-100px;left:-100px;border-color:rgba(204,214,80,0.05)"></div>
   <div class="login-card">
     <div class="login-logo">
-      <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/><rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".3"/></svg>
+      <img src="https://ywckzclxdbhlbgqpmtvc.supabase.co/storage/v1/object/public/template/logos/DC_logo_cor.png" alt="DCarli" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
+      <div style="display:none;font-size:18px;font-weight:700;color:var(--dcarli-text)">DCarli</div>
     </div>
-    <div class="login-title">Acesso administrativo</div>
-    <div class="login-sub">Entre com suas credenciais para gerenciar os cronogramas.</div>
+    <div class="login-title">Painel Administrativo</div>
+    <div class="login-sub">Lei do Bem — Acesso restrito</div>
     <label class="login-label">E-mail</label>
     <input class="login-input" type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
     <label class="login-label">Senha</label>
@@ -125,15 +167,15 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     <div class="login-err" id="login-err">E-mail ou senha incorretos.</div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
   </div>
+  <div class="login-footer"><span>Powered by <strong style="color:rgba(204,214,80,0.6)">DCarli</strong></span></div>
 </div>
 
-<!-- Painel admin -->
+<!-- ADMIN -->
 <div id="admin-screen" style="display:none">
   <div class="topbar">
-    <div class="logo">
-      <div class="logo-mark">
-        <svg viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".9"/><rect x="10" y="2" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="2" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".6"/><rect x="10" y="10" width="6" height="6" rx="1.5" fill="white" opacity=".3"/></svg>
-      </div>
+    <div class="logo-wrap">
+      <img class="logo-img" src="https://ywckzclxdbhlbgqpmtvc.supabase.co/storage/v1/object/public/template/logos/DC_logo_cor.png" alt="DCarli" onerror="this.style.display='none'"/>
+      <div class="logo-divider"></div>
       <div>
         <div class="logo-name">Painel Admin</div>
         <div class="logo-sub">Lei do Bem</div>
@@ -145,312 +187,418 @@ body{background:var(--bg);color:var(--text);min-height:100vh}
     </div>
   </div>
 
-  <div class="page">
-    <div class="client-selector">
+  <div class="tabs">
+    <button class="tab active" id="tab-cronograma" onclick="switchTab('cronograma')">Cronogramas</button>
+    <button class="tab" id="tab-historico" onclick="switchTab('historico')">Histórico</button>
+    <button class="tab" id="tab-mcti" onclick="switchTab('mcti')">Status MCTI</button>
+  </div>
+
+  <!-- ABA CRONOGRAMA -->
+  <div id="pane-cronograma" class="page">
+    <div class="selector-bar">
       <label>Cliente</label>
       <select id="client-select" onchange="loadClient()">
         <option value="">Selecione um cliente...</option>
       </select>
       <span class="save-indicator" id="save-indicator"></span>
     </div>
-
     <div id="dashboard" style="display:none">
       <div class="metrics">
-        <div class="metric-card">
-          <div class="metric-label">Progresso</div>
-          <div class="metric-value" id="met-pct">—</div>
-          <div class="metric-sub" id="met-tasks">carregando</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Etapas concluídas</div>
-          <div class="metric-value" id="met-stages">—</div>
-          <div class="metric-sub" id="met-stages-total">de — etapas</div>
-        </div>
-        <div class="metric-card">
-          <div class="metric-label">Docs pendentes</div>
-          <div class="metric-value" id="met-docs" style="color:var(--amber)">—</div>
-          <div class="metric-sub">documentos aguardados</div>
-        </div>
+        <div class="metric-card"><div class="metric-label">Progresso</div><div class="metric-value" id="met-pct">—</div><div class="metric-sub" id="met-tasks">carregando</div></div>
+        <div class="metric-card"><div class="metric-label">Etapas concluídas</div><div class="metric-value" id="met-stages">—</div><div class="metric-sub" id="met-stages-total">de — etapas</div></div>
+        <div class="metric-card"><div class="metric-label">Docs pendentes</div><div class="metric-value" id="met-docs" style="color:var(--amber)">—</div><div class="metric-sub">documentos aguardados</div></div>
       </div>
       <div class="progress-wrap">
-        <div class="progress-head">
-          <span>Progresso geral</span>
-          <span class="progress-pct" id="prog-pct">—</span>
-        </div>
+        <div class="progress-head"><span>Progresso geral</span><span class="progress-pct" id="prog-pct">—</span></div>
         <div class="track"><div class="fill" id="prog-fill" style="width:0%"></div></div>
       </div>
-      <div class="stages" id="stages-list"></div>
+      <div id="stages-list"></div>
     </div>
-
-    <div id="main-loading" class="loading" style="display:none">
-      <span class="loading-dot"></span>
-      <span class="loading-dot"></span>
-      <span class="loading-dot"></span>
-    </div>
-
+    <div id="main-loading" class="loading" style="display:none"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
     <div id="empty-state" class="empty">Selecione um cliente para começar.</div>
+  </div>
+
+  <!-- ABA HISTÓRICO -->
+  <div id="pane-historico" class="page" style="display:none">
+    <div class="selector-bar">
+      <label>Empresa</label>
+      <select id="hist-empresa-select" onchange="loadHistorico()">
+        <option value="">Selecione uma empresa...</option>
+      </select>
+    </div>
+    <div id="hist-dashboard" style="display:none">
+      <div class="info-box">Valores em R$ sem formatação — ex: 8500000 para R$ 8,5M. Salvo automaticamente ao sair do campo.</div>
+      <div class="hist-grid" id="hist-grid"></div>
+      <button class="hist-add-btn" onclick="addHistAno()">+ Adicionar ano</button>
+    </div>
+    <div id="hist-loading" class="loading" style="display:none"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>
+    <div id="hist-empty" class="empty">Selecione uma empresa para gerenciar o histórico.</div>
+  </div>
+
+  <!-- ABA STATUS MCTI -->
+  <div id="pane-mcti" class="page" style="display:none">
+    <div class="info-box">Atualize o status MCTI de cada cliente. Aparece como badge de destaque no portal do cliente.</div>
+    <div id="mcti-list"><div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div></div>
   </div>
 </div>
 
 <script>
-// ============================================================
-// CONFIGURAÇÃO — substitua pelos seus valores do Supabase
-// ============================================================
 const SUPABASE_URL = "https://ywckzclxdbhlbgqpmtvc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Y2t6Y2x4ZGJobGJncXBtdHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzgwNTksImV4cCI6MjA4OTI1NDA1OX0.Cfxbis5sgn2pT7mnULlEfqW1In1OmDBxUUTHsP3H3Og";
-// ============================================================
 
-let accessToken = null;
-let saveTimeout = null;
+var accessToken = null;
+var allClientes = [];
+var currentHistEmpresa = null;
+var histItems = [];
 
-async function fetchJSON(path, token) {
-  const headers = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": "Bearer " + (token || SUPABASE_KEY)
-  };
-  const res = await fetch(SUPABASE_URL + path, {headers});
-  if (!res.ok) throw new Error("Erro " + res.status);
-  return res.json();
-}
+var MCTI_OPTIONS = [
+  {val:"nao_enviado",            label:"Não enviado"},
+  {val:"em_analise",             label:"Em análise"},
+  {val:"contest_parcial",        label:"Contestação — aprovação parcial"},
+  {val:"contest_reprovado",      label:"Contestação — reprovação total"},
+  {val:"recurso_parcial",        label:"Recurso — aprovação parcial"},
+  {val:"recurso_reprovado",      label:"Recurso — reprovação total"},
+  {val:"aprovacao_parcial",      label:"Aprovação parcial final"},
+  {val:"aprovacao_total",        label:"Aprovação total"},
+  {val:"reprovado_integralmente",label:"Reprovado integralmente"}
+];
 
-async function doLogin() {
-  const email    = document.getElementById("login-email").value.trim();
-  const password = document.getElementById("login-password").value;
-  const btn      = document.getElementById("login-btn");
-  const err      = document.getElementById("login-err");
+var GRUPOS_INFO = {
+  contabil:{label:"Escopo Contábil",sub:"Apuração de dispêndios",bg:"#E6F1FB",cor:"#185FA5",
+    icon:'<svg width="14" height="14" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="2" stroke="#185FA5" stroke-width="1.5"/><path d="M5 9h8M5 6h8M5 12h5" stroke="#185FA5" stroke-width="1.2" stroke-linecap="round"/></svg>'},
+  tecnico:{label:"Escopo Técnico",sub:"Coleta e elaboração do relatório",bg:"#E1F5EE",cor:"#0F6E56",
+    icon:'<svg width="14" height="14" viewBox="0 0 18 18" fill="none"><circle cx="9" cy="9" r="7" stroke="#0F6E56" stroke-width="1.5"/><path d="M6 9l2 2 4-4" stroke="#0F6E56" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'},
+  mcti:{label:"MCTI",sub:"Preenchimento e envio",bg:"#EEEDFE",cor:"#534AB7",
+    icon:'<svg width="14" height="14" viewBox="0 0 18 18" fill="none"><path d="M9 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z" stroke="#534AB7" stroke-width="1.5" stroke-linejoin="round"/></svg>'}
+};
 
-  if (!email || !password) return;
-  btn.disabled   = true;
-  btn.textContent = "Entrando...";
-  err.style.display = "none";
-
-  try {
-    const res = await fetch(SUPABASE_URL + "/auth/v1/token?grant_type=password", {
-      method: "POST",
-      headers: {"apikey": SUPABASE_KEY, "Content-Type": "application/json"},
-      body: JSON.stringify({email, password})
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error_description || "Erro de autenticação");
-
-    accessToken = data.access_token;
-    document.getElementById("login-screen").style.display  = "none";
-    document.getElementById("admin-screen").style.display  = "block";
-    loadClientes();
-
-  } catch(e) {
-    err.style.display = "block";
-    btn.disabled = false;
-    btn.textContent = "Entrar";
-  }
-}
-
-async function doLogout() {
-  accessToken = null;
-  document.getElementById("admin-screen").style.display = "none";
-  document.getElementById("login-screen").style.display = "flex";
-  document.getElementById("login-password").value = "";
-  document.getElementById("client-select").innerHTML = '<option value="">Selecione um cliente...</option>';
-  document.getElementById("stages-list").innerHTML = "";
-  document.getElementById("dashboard").style.display = "none";
-  document.getElementById("empty-state").style.display = "block";
-}
-
-async function patch(table, id, fields) {
-  const ind = document.getElementById("save-indicator");
-  ind.textContent = "Salvando...";
-  ind.className   = "save-indicator saving";
-  const res = await fetch(SUPABASE_URL + `/rest/v1/${table}?id=eq.${id}`, {
-    method: "PATCH",
+async function api(path, method, body) {
+  var opts = {
+    method: method||"GET",
     headers: {
       "apikey": SUPABASE_KEY,
-      "Authorization": "Bearer " + accessToken,
+      "Authorization": "Bearer "+(accessToken||SUPABASE_KEY),
       "Content-Type": "application/json",
-      "Prefer": "return=minimal"
-    },
-    body: JSON.stringify(fields)
-  });
-  if (res.ok) {
-    ind.textContent = "Salvo";
-    ind.className   = "save-indicator saved";
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => { ind.textContent = ""; ind.className = "save-indicator"; }, 2000);
-  } else {
-    ind.textContent = "Erro ao salvar";
-    ind.className   = "save-indicator";
-  }
+      "Prefer": (method==="POST"?"return=representation":"return=minimal")
+    }
+  };
+  if(body) opts.body = JSON.stringify(body);
+  var res = await fetch(SUPABASE_URL+path, opts);
+  if(!res.ok) throw new Error("Erro "+res.status);
+  var txt = await res.text();
+  return txt ? JSON.parse(txt) : null;
 }
 
 function sc(s) {
-  if (s === "done")        return {bg:"var(--green-light)", text:"var(--green)",  dot:"var(--green-mid)", label:"Concluído"};
-  if (s === "in-progress") return {bg:"var(--blue-light)",  text:"var(--blue)",   dot:"var(--blue-mid)",  label:"Em andamento"};
-  if (s === "delayed")     return {bg:"var(--red-light)",   text:"var(--red)",    dot:"var(--red-mid)",   label:"Em atraso"};
-  return                          {bg:"var(--gray-light)",  text:"var(--gray)",   dot:"var(--gray-mid)",  label:"Pendente"};
+  if(s==="done")        return {bg:"var(--green-light)",text:"var(--green)",  dot:"var(--green-mid)", label:"Concluído"};
+  if(s==="in-progress") return {bg:"var(--blue-light)", text:"var(--blue)",   dot:"var(--blue-mid)",  label:"Em andamento"};
+  if(s==="delayed")     return {bg:"var(--red-light)",  text:"var(--red)",    dot:"var(--red-mid)",   label:"Em atraso"};
+  return                       {bg:"var(--gray-light)", text:"var(--gray)",   dot:"var(--gray-mid)",  label:"Pendente"};
 }
 
-function stageStatus(atividades) {
-  if (!atividades.length) return "pending";
-  if (atividades.some(t => t.status === "delayed")) return "delayed";
-  const done = atividades.filter(t => t.status === "done").length;
-  if (done === atividades.length) return "done";
-  if (done > 0 || atividades.some(t => t.status === "in-progress")) return "in-progress";
+function stageStatus(ea) {
+  if(!ea.length) return "pending";
+  if(ea.some(function(t){return t.status==="delayed";})) return "delayed";
+  var done=ea.filter(function(t){return t.status==="done";}).length;
+  if(done===ea.length) return "done";
+  if(done>0||ea.some(function(t){return t.status==="in-progress";})) return "in-progress";
   return "pending";
 }
 
-function updateMetrics(atividades, documentos, etapas) {
-  const totalAtiv  = atividades.length;
-  const doneAtiv   = atividades.filter(a => a.status === "done").length;
-  const pct        = totalAtiv ? Math.round(doneAtiv / totalAtiv * 100) : 0;
-  const pendDocs   = documentos.filter(d => d.status === "pending").length;
-  const doneStages = etapas.filter(e => {
-    const ea = atividades.filter(a => a.etapa_id === e.id);
-    return stageStatus(ea) === "done";
-  }).length;
-  document.getElementById("prog-pct").textContent         = pct + "%";
-  document.getElementById("prog-fill").style.width        = pct + "%";
-  document.getElementById("met-pct").textContent          = pct + "%";
-  document.getElementById("met-tasks").textContent        = doneAtiv + " de " + totalAtiv + " atividades";
-  document.getElementById("met-stages").textContent       = doneStages;
-  document.getElementById("met-stages-total").textContent = "de " + etapas.length + " etapas";
-  document.getElementById("met-docs").textContent         = pendDocs;
+function fmt(v) {
+  if(v>=1000000) return "R$ "+(v/1000000).toFixed(1).replace(".",",")+"M";
+  if(v>=1000)    return "R$ "+(v/1000).toFixed(0)+"K";
+  return "R$ "+Math.round(v);
 }
 
-function toggleStage(si) {
-  const b = document.getElementById("body-" + si);
-  const c = document.getElementById("chv-" + si);
-  b.classList.toggle("open");
-  c.style.transform = b.classList.contains("open") ? "rotate(180deg)" : "rotate(0deg)";
+function getMctiColor(s) {
+  if(s==="aprovacao_total"||s==="aprovacao_parcial") return "#639922";
+  if(s==="em_analise") return "#378ADD";
+  if(s==="contest_parcial"||s==="recurso_parcial") return "#BA7517";
+  if(s==="contest_reprovado"||s==="recurso_reprovado"||s==="reprovado_integralmente") return "#E24B4A";
+  return "#B4B2A9";
 }
 
-function onStatusChange(sel, itemId) {
-  const newStatus = sel.value;
-  sel.className   = "status-select " + newStatus;
-  const item = window.allItens.find(i => i.id === itemId);
-  if (item) item.status = newStatus;
-  const atividades = window.allItens.filter(i => i.tipo === "atividade");
-  const documentos  = window.allItens.filter(i => i.tipo === "documento");
-  updateMetrics(atividades, documentos, window.etapas);
-  window.etapas.forEach((etapa, si) => {
-    const ea  = atividades.filter(a => a.etapa_id === etapa.id);
-    const ss  = stageStatus(ea);
-    const col = sc(ss);
-    const num = document.getElementById("snum-" + si);
-    const bdg = document.getElementById("sbdg-" + si);
-    if (num) { num.style.background = col.bg; num.style.color = col.text; }
-    if (bdg) { bdg.style.background = col.bg; bdg.style.color = col.text; bdg.textContent = col.label; }
+function switchTab(tab) {
+  ["cronograma","historico","mcti"].forEach(function(t){
+    document.getElementById("tab-"+t).classList.toggle("active", t===tab);
+    document.getElementById("pane-"+t).style.display = t===tab?"block":"none";
   });
-  patch("itens", itemId, {status: newStatus});
+  if(tab==="mcti") loadMctiList();
+  if(tab==="historico") populateHistEmpresas();
 }
 
-function onNoteChange(textarea, etapaId) {
-  clearTimeout(textarea._t);
-  textarea._t = setTimeout(() => patch("etapas", etapaId, {observacao: textarea.value}), 800);
-}
-
-async function loadClientes() {
+async function doLogin() {
+  var email=document.getElementById("login-email").value.trim();
+  var pass=document.getElementById("login-password").value;
+  var btn=document.getElementById("login-btn"),err=document.getElementById("login-err");
+  if(!email||!pass) return;
+  btn.disabled=true; btn.textContent="Entrando..."; err.style.display="none";
   try {
-    const clientes = await fetchJSON(`/rest/v1/clientes?select=nome,slug&order=nome.asc`, accessToken);
-    const sel = document.getElementById("client-select");
-    clientes.forEach(c => {
-      const opt = document.createElement("option");
-      opt.value       = c.slug;
-      opt.textContent = c.nome;
-      sel.appendChild(opt);
-    });
+    var res=await fetch(SUPABASE_URL+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email:email,password:pass})});
+    var data=await res.json();
+    if(!res.ok) throw new Error("invalido");
+    accessToken=data.access_token;
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("admin-screen").style.display="block";
+    await loadAllClientes();
   } catch(e) {
-    document.getElementById("empty-state").textContent = "Erro ao carregar clientes.";
+    err.style.display="block"; btn.disabled=false; btn.textContent="Entrar"; accessToken=null;
   }
+}
+
+function doLogout() {
+  accessToken=null;
+  document.getElementById("admin-screen").style.display="none";
+  document.getElementById("login-screen").style.display="flex";
+  document.getElementById("login-password").value="";
+  document.getElementById("login-btn").disabled=false;
+  document.getElementById("login-btn").textContent="Entrar";
+}
+
+async function loadAllClientes() {
+  allClientes=await api("/rest/v1/clientes?select=id,nome,slug,ano_base,empresa_slug&order=nome.asc");
+  var sel=document.getElementById("client-select");
+  sel.innerHTML='<option value="">Selecione um cliente...</option>';
+  allClientes.forEach(function(c){
+    var opt=document.createElement("option");
+    opt.value=c.slug; opt.textContent=c.nome+" "+c.ano_base;
+    sel.appendChild(opt);
+  });
 }
 
 async function loadClient() {
-  const slug = document.getElementById("client-select").value;
-  document.getElementById("dashboard").style.display    = "none";
-  document.getElementById("empty-state").style.display  = "none";
-  document.getElementById("main-loading").style.display = "none";
-  document.getElementById("stages-list").innerHTML      = "";
-  if (!slug) { document.getElementById("empty-state").style.display = "block"; return; }
-
-  document.getElementById("main-loading").style.display = "block";
+  var slug=document.getElementById("client-select").value;
+  if(!slug){document.getElementById("dashboard").style.display="none";document.getElementById("empty-state").style.display="block";return;}
+  document.getElementById("dashboard").style.display="none";
+  document.getElementById("empty-state").style.display="none";
+  document.getElementById("main-loading").style.display="block";
   try {
-    const [etapas, itens] = await Promise.all([
-      fetchJSON(`/rest/v1/etapas?cliente_slug=eq.${slug}&order=ordem.asc&select=*`, accessToken),
-      fetchJSON(`/rest/v1/itens?cliente_slug=eq.${slug}&order=ordem.asc&select=*`, accessToken)
-    ]);
+    var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
+    var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
+    var atividades=itens.filter(function(i){return i.tipo==="atividade";});
+    var documentos=itens.filter(function(i){return i.tipo==="documento";});
+    var totalAtiv=atividades.length;
+    var doneAtiv=atividades.filter(function(a){return a.status==="done";}).length;
+    var pct=totalAtiv?Math.round(doneAtiv/totalAtiv*100):0;
+    var pendDocs=documentos.filter(function(d){return d.status==="pending";}).length;
+    var doneStages=etapas.filter(function(e){var ea=atividades.filter(function(a){return a.etapa_id===e.id;});return stageStatus(ea)==="done";}).length;
 
-    window.allItens = itens;
-    window.etapas   = etapas;
+    document.getElementById("prog-pct").textContent=pct+"%";
+    document.getElementById("prog-fill").style.width=pct+"%";
+    document.getElementById("met-pct").textContent=pct+"%";
+    document.getElementById("met-tasks").textContent=doneAtiv+" de "+totalAtiv+" atividades";
+    document.getElementById("met-stages").textContent=doneStages;
+    document.getElementById("met-stages-total").textContent="de "+etapas.length+" etapas";
+    document.getElementById("met-docs").textContent=pendDocs;
 
-    const atividades = itens.filter(i => i.tipo === "atividade");
-    const documentos  = itens.filter(i => i.tipo === "documento");
+    var list=document.getElementById("stages-list");
+    list.innerHTML="";
 
-    document.getElementById("main-loading").style.display = "none";
-    document.getElementById("dashboard").style.display    = "block";
-    updateMetrics(atividades, documentos, etapas);
+    ["contabil","tecnico","mcti"].forEach(function(gk){
+      var g=GRUPOS_INFO[gk];
+      var etG=etapas.filter(function(e){return e.grupo===gk;});
+      if(!etG.length) return;
+      var doneG=etG.filter(function(e){var ea=atividades.filter(function(a){return a.etapa_id===e.id;});return stageStatus(ea)==="done";}).length;
+      var pctG=Math.round(doneG/etG.length*100);
 
-    const list = document.getElementById("stages-list");
-    list.innerHTML = "";
+      var sec=document.createElement("div");
+      sec.className="grupo-section";
+      sec.innerHTML='<div class="grupo-header"><div class="grupo-icon" style="background:'+g.bg+'">'+g.icon+'</div><div><div class="grupo-label">'+g.label+'</div><div class="grupo-sub">'+g.sub+'</div></div><span class="grupo-pct">'+pctG+'%</span></div><div class="stages" id="stages-'+gk+'"></div>';
+      list.appendChild(sec);
 
-    etapas.forEach((etapa, si) => {
-      const ea = atividades.filter(a => a.etapa_id === etapa.id);
-      const ed = documentos.filter(d => d.etapa_id === etapa.id);
-      const ss  = stageStatus(ea);
-      const col = sc(ss);
-      const autoOpen = ss === "in-progress" || ss === "delayed";
+      var stCont=sec.querySelector("#stages-"+gk);
+      etG.forEach(function(etapa,si){
+        var ea=atividades.filter(function(a){return a.etapa_id===etapa.id;});
+        var ed=documentos.filter(function(d){return d.etapa_id===etapa.id;});
+        var ss=stageStatus(ea),col=sc(ss);
+        var autoOpen=ss==="in-progress"||ss==="delayed";
 
-      const card = document.createElement("div");
-      card.className = "stage-card";
-      card.innerHTML = `
-        <div class="stage-header" onclick="toggleStage(${si})">
-          <div class="stage-num" id="snum-${si}" style="background:${col.bg};color:${col.text}">${String(si+1).padStart(2,"0")}</div>
-          <div class="stage-info">
-            <div class="stage-name">${etapa.nome}</div>
-            <div class="stage-date">${etapa.periodo}</div>
-          </div>
-          <span class="badge" id="sbdg-${si}" style="background:${col.bg};color:${col.text}">${col.label}</span>
-          <span class="chev" id="chv-${si}">▼</span>
-        </div>
-        <div class="stage-body${autoOpen?" open":""}" id="body-${si}">
-          <div class="stage-inner">
-            <div class="section-label">Atividades</div>
-            ${ea.map(t => `<div class="item-row">
-              <div class="item-dot" style="background:${sc(t.status).dot}"></div>
-              <span class="item-name">${t.nome}</span>
-              <select class="status-select ${t.status}" onchange="onStatusChange(this,${t.id})">
-                <option value="pending"     ${t.status==="pending"     ?"selected":""}>Pendente</option>
-                <option value="in-progress" ${t.status==="in-progress" ?"selected":""}>Em andamento</option>
-                <option value="done"        ${t.status==="done"        ?"selected":""}>Concluído</option>
-                <option value="delayed"     ${t.status==="delayed"     ?"selected":""}>Em atraso</option>
-              </select>
-            </div>`).join("")}
+        var card=document.createElement("div");
+        card.className="stage-card";
 
-            ${ed.length > 0 ? `
-            <div class="section-label">Documentos</div>
-            ${ed.map(d => `<div class="item-row">
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="flex-shrink:0;color:var(--text-hint)"><rect x="2" y="1" width="9" height="11" rx="1.5" stroke="currentColor" stroke-width="1"/><path d="M4 4.5h5M4 6.5h5M4 8.5h3" stroke="currentColor" stroke-width=".9"/></svg>
-              <span class="item-name">${d.nome}</span>
-              <select class="status-select ${d.status}" onchange="onStatusChange(this,${d.id})">
-                <option value="pending" ${d.status==="pending" ?"selected":""}>Pendente</option>
-                <option value="done"    ${d.status==="done"    ?"selected":""}>Recebido</option>
-                <option value="delayed" ${d.status==="delayed" ?"selected":""}>Em atraso</option>
-              </select>
-            </div>`).join("")}` : ""}
+        var ativHtml=ea.map(function(t){
+          var tc=sc(t.status);
+          return '<div class="item-row"><div class="item-dot" style="background:'+tc.dot+'"></div><span class="item-name">'+t.nome+'</span>'+
+            '<select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)">'+
+              '<option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option>'+
+              '<option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option>'+
+              '<option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option>'+
+              '<option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option>'+
+            '</select></div>';
+        }).join("");
 
-            <div class="note-row">
-              <div class="note-label">Observação</div>
-              <textarea class="note-input" placeholder="Adicione uma observação..." oninput="onNoteChange(this,${etapa.id})">${etapa.observacao||""}</textarea>
-            </div>
-          </div>
-        </div>
-      `;
-      list.appendChild(card);
-      if (autoOpen) document.getElementById("chv-" + si).style.transform = "rotate(180deg)";
+        var docHtml="";
+        if(ed.length){
+          docHtml='<div class="section-label">Documentos</div>'+ed.map(function(d){
+            var dc=sc(d.status);
+            var dlBadge=d.arquivo_url?'<span class="dl-badge">Template ↓</span>':"";
+            return '<div class="item-row"><div class="item-dot" style="background:'+dc.dot+'"></div><span class="item-name">'+d.nome+'</span>'+dlBadge+
+              '<select class="status-select '+d.status+'" onchange="updateStatus(\'itens\','+d.id+',this)">'+
+                '<option value="pending"'+(d.status==="pending"?" selected":"")+'>Pendente</option>'+
+                '<option value="in-progress"'+(d.status==="in-progress"?" selected":"")+'>Em andamento</option>'+
+                '<option value="done"'+(d.status==="done"?" selected":"")+'>Recebido</option>'+
+                '<option value="delayed"'+(d.status==="delayed"?" selected":"")+'>Em atraso</option>'+
+              '</select></div>';
+          }).join("");
+        }
+
+        card.innerHTML=
+          '<div class="stage-header" onclick="toggleStage(\''+si+'-'+gk+'\')">'+
+            '<div class="stage-num" style="background:'+col.bg+';color:'+col.text+'">'+String(si+1).padStart(2,"0")+'</div>'+
+            '<div class="stage-info"><div class="stage-name">'+etapa.nome+'</div><div class="stage-date">'+etapa.periodo+'</div></div>'+
+            '<span class="badge" style="background:'+col.bg+';color:'+col.text+'">'+col.label+'</span>'+
+            '<span class="chev" id="chev-'+si+'-'+gk+'">▼</span>'+
+          '</div>'+
+          '<div class="stage-body'+(autoOpen?" open":"")+'" id="body-'+si+'-'+gk+'">'+
+            '<div class="stage-inner">'+
+              '<div class="section-label">Atividades</div>'+ativHtml+docHtml+
+              '<div class="note-row"><div class="note-label">Observação</div>'+
+              '<textarea class="note-input" placeholder="Observação visível ao cliente..." onblur="updateNote('+etapa.id+',this)">'+(etapa.observacao||"")+'</textarea></div>'+
+            '</div>'+
+          '</div>';
+
+        stCont.appendChild(card);
+        if(autoOpen){var ch=document.getElementById("chev-"+si+"-"+gk);if(ch)ch.style.transform="rotate(180deg)";}
+      });
     });
 
-  } catch(err) {
-    document.getElementById("main-loading").style.display = "none";
-    document.getElementById("stages-list").innerHTML = `<div class="error-box">Erro ao carregar: ${err.message}</div>`;
-    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("main-loading").style.display="none";
+    document.getElementById("dashboard").style.display="block";
+  } catch(e) {
+    document.getElementById("main-loading").style.display="none";
+    document.getElementById("stages-list").innerHTML='<div class="error-box">Erro ao carregar: '+e.message+'</div>';
+    document.getElementById("dashboard").style.display="block";
   }
+}
+
+function toggleStage(id) {
+  var b=document.getElementById("body-"+id);
+  var c=document.getElementById("chev-"+id);
+  b.classList.toggle("open");
+  c.style.transform=b.classList.contains("open")?"rotate(180deg)":"rotate(0deg)";
+}
+
+async function updateStatus(table, id, sel) {
+  sel.className="status-select "+sel.value;
+  showSave("saving");
+  try { await api("/rest/v1/"+table+"?id=eq."+id,"PATCH",{status:sel.value}); showSave("saved"); }
+  catch(e) { showSave("error"); }
+}
+
+async function updateNote(id, textarea) {
+  showSave("saving");
+  try { await api("/rest/v1/etapas?id=eq."+id,"PATCH",{observacao:textarea.value}); showSave("saved"); }
+  catch(e) { showSave("error"); }
+}
+
+function showSave(state) {
+  var el=document.getElementById("save-indicator");
+  if(!el) return;
+  if(state==="saving"){el.textContent="Salvando...";el.className="save-indicator saving";}
+  else if(state==="saved"){el.textContent="Salvo ✓";el.className="save-indicator saved";setTimeout(function(){el.textContent="";el.className="save-indicator";},2000);}
+  else{el.textContent="Erro ao salvar";el.className="save-indicator";}
+}
+
+// HISTÓRICO
+function populateHistEmpresas() {
+  var empresas={};
+  allClientes.forEach(function(c){
+    var slug=c.empresa_slug||(c.slug.replace(/-\d{4}$/,""));
+    if(!empresas[slug]) empresas[slug]={slug:slug,nome:c.nome};
+  });
+  var sel=document.getElementById("hist-empresa-select");
+  sel.innerHTML='<option value="">Selecione uma empresa...</option>';
+  Object.values(empresas).forEach(function(e){
+    var opt=document.createElement("option");
+    opt.value=e.slug; opt.textContent=e.nome;
+    sel.appendChild(opt);
+  });
+}
+
+async function loadHistorico() {
+  currentHistEmpresa=document.getElementById("hist-empresa-select").value;
+  if(!currentHistEmpresa){document.getElementById("hist-dashboard").style.display="none";document.getElementById("hist-empty").style.display="block";return;}
+  document.getElementById("hist-empty").style.display="none";
+  document.getElementById("hist-loading").style.display="block";
+  document.getElementById("hist-dashboard").style.display="none";
+  try {
+    histItems=await api("/rest/v1/historico_beneficio?empresa_slug=eq."+currentHistEmpresa+"&order=ano.asc");
+    renderHistGrid();
+    document.getElementById("hist-loading").style.display="none";
+    document.getElementById("hist-dashboard").style.display="block";
+  } catch(e) {
+    document.getElementById("hist-loading").style.display="none";
+    document.getElementById("hist-grid").innerHTML='<div class="error-box">Erro: '+e.message+'</div>';
+    document.getElementById("hist-dashboard").style.display="block";
+  }
+}
+
+function renderHistGrid() {
+  var grid=document.getElementById("hist-grid");
+  grid.innerHTML=histItems.map(function(h){
+    return '<div class="hist-card">'+
+      '<div class="hist-card-head"><div class="hist-card-year">'+h.ano+'</div><button class="hist-card-del" onclick="deleteHistAno('+h.id+')">Remover</button></div>'+
+      '<div class="hist-field"><label>Dispêndio com P&D (R$)</label><input type="number" value="'+h.dispendio+'" onblur="saveHistItem('+h.id+',this,\'dispendio\')"/><div class="hist-preview">'+fmt(Number(h.dispendio))+'</div></div>'+
+      '<div class="hist-field"><label>Benefício gerado (R$)</label><input type="number" value="'+h.beneficio+'" onblur="saveHistItem('+h.id+',this,\'beneficio\')"/><div class="hist-preview">'+fmt(Number(h.beneficio))+'</div></div>'+
+    '</div>';
+  }).join("");
+}
+
+async function saveHistItem(id, input, field) {
+  try {
+    var body={}; body[field]=Number(input.value);
+    await api("/rest/v1/historico_beneficio?id=eq."+id,"PATCH",body);
+    await loadHistorico();
+  } catch(e) { alert("Erro ao salvar: "+e.message); }
+}
+
+async function deleteHistAno(id) {
+  if(!confirm("Remover este ano do histórico?")) return;
+  await api("/rest/v1/historico_beneficio?id=eq."+id,"DELETE");
+  await loadHistorico();
+}
+
+async function addHistAno() {
+  var ano=prompt("Qual ano deseja adicionar? (ex: 2025)");
+  if(!ano||isNaN(ano)) return;
+  try {
+    await api("/rest/v1/historico_beneficio","POST",{empresa_slug:currentHistEmpresa,ano:Number(ano),dispendio:0,beneficio:0});
+    await loadHistorico();
+  } catch(e) { alert("Erro ao adicionar: "+e.message); }
+}
+
+// STATUS MCTI
+async function loadMctiList() {
+  var list=document.getElementById("mcti-list");
+  list.innerHTML='<div class="loading"><span class="loading-dot"></span><span class="loading-dot"></span><span class="loading-dot"></span></div>';
+  try {
+    var statuses=await api("/rest/v1/status_mcti?select=*&order=cliente_slug.asc");
+    var statusMap={};
+    statuses.forEach(function(s){statusMap[s.cliente_slug]=s;});
+    list.innerHTML=allClientes.map(function(c){
+      var cur=statusMap[c.slug]?statusMap[c.slug].status:"nao_enviado";
+      var opts=MCTI_OPTIONS.map(function(o){return '<option value="'+o.val+'"'+(cur===o.val?" selected":"")+'>'+o.label+'</option>';}).join("");
+      return '<div class="mcti-bar">'+
+        '<div class="mcti-dot" id="md-'+c.slug+'" style="background:'+getMctiColor(cur)+'"></div>'+
+        '<label>'+c.nome+' '+c.ano_base+'</label>'+
+        '<select class="mcti-select" onchange="updateMcti(\''+c.slug+'\',this)">'+opts+'</select>'+
+      '</div>';
+    }).join("");
+  } catch(e) {
+    list.innerHTML='<div class="error-box">Erro: '+e.message+'</div>';
+  }
+}
+
+async function updateMcti(slug, sel) {
+  var val=sel.value;
+  var dot=document.getElementById("md-"+slug);
+  if(dot) dot.style.background=getMctiColor(val);
+  try {
+    var ex=await api("/rest/v1/status_mcti?cliente_slug=eq."+slug+"&select=id");
+    if(ex&&ex.length) await api("/rest/v1/status_mcti?cliente_slug=eq."+slug,"PATCH",{status:val});
+    else await api("/rest/v1/status_mcti","POST",{cliente_slug:slug,status:val});
+  } catch(e) { alert("Erro ao salvar: "+e.message); }
 }
 </script>
 </body>
