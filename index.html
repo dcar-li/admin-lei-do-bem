@@ -725,23 +725,85 @@ function renderStep1(pane,footer){
     '<div class="wizard-title">Identificação do projeto</div>'+
     '<div class="wizard-sub">Informe os dados básicos do novo cliente/ano-base.</div>'+
     '<div class="wiz-grid">'+
-      '<div class="wiz-field"><label class="field-label">Nome do cliente</label><input class="field-input" id="wiz-nome" placeholder="ex: Stepan" value="'+wiz.nome+'"/></div>'+
-      '<div class="wiz-field"><label class="field-label">Ano-base</label><input class="field-input" id="wiz-ano" type="number" placeholder="ex: 2027" value="'+wiz.anoBase+'"/></div>'+
+      '<div class="wiz-field">'+
+        '<label class="field-label">Nome do cliente</label>'+
+        '<input class="field-input" id="wiz-nome" placeholder="ex: Stepan" value="'+wiz.nome+'" oninput="onWizIdentInput()"/>'+
+      '</div>'+
+      '<div class="wiz-field">'+
+        '<label class="field-label">Ano-base</label>'+
+        '<input class="field-input" id="wiz-ano" type="number" placeholder="ex: 2027" value="'+wiz.anoBase+'" oninput="onWizIdentInput()"/>'+
+      '</div>'+
     '</div>'+
+    '<div id="wiz-slug-feedback" style="margin:-4px 0 12px;min-height:20px"></div>'+
     '<div class="wiz-grid">'+
-      '<div class="wiz-field"><label class="field-label">Empresa slug</label><input class="field-input" id="wiz-empresa" placeholder="ex: stepan" value="'+wiz.empresaSlug+'"/><div style="font-size:11px;color:var(--text-hint);margin-top:3px;font-weight:500">Usado para vincular anos ao histórico</div></div>'+
-      '<div class="wiz-field"><label class="field-label">Parceiro</label><select class="field-select" id="wiz-parceiro">'+parcOpts+'</select></div>'+
+      '<div class="wiz-field">'+
+        '<label class="field-label">Empresa slug</label>'+
+        '<input class="field-input" id="wiz-empresa" placeholder="Preenchido automaticamente" value="'+wiz.empresaSlug+'"/>'+
+        '<div style="font-size:11px;color:var(--text-hint);margin-top:3px;font-weight:500">Usado para vincular anos ao histórico</div>'+
+      '</div>'+
+      '<div class="wiz-field">'+
+        '<label class="field-label">Parceiro</label>'+
+        '<select class="field-select" id="wiz-parceiro">'+parcOpts+'</select>'+
+      '</div>'+
     '</div>'+
   '</div>';
-  footer.innerHTML='<div style="font-size:12px;color:var(--text-hint);font-weight:500">Passo 1 de 4</div><button class="btn-next" onclick="goStep2()">Próximo: Etapas →</button>';
+  footer.innerHTML=
+    '<div style="font-size:12px;color:var(--text-hint);font-weight:500">Passo 1 de 4</div>'+
+    '<button class="btn-next" id="btn-step1-next" onclick="goStep2()">Próximo: Etapas →</button>';
+  if(wiz.nome||wiz.anoBase) setTimeout(function(){onWizIdentInput();},50);
 }
 
-function goStep2(){
+function onWizIdentInput(){
+  var nome=(document.getElementById("wiz-nome")||{}).value||"";
+  var ano=(document.getElementById("wiz-ano")||{}).value||"";
+  var feedback=document.getElementById("wiz-slug-feedback");
+  var btn=document.getElementById("btn-step1-next");
+  var empEl=document.getElementById("wiz-empresa");
+  nome=nome.trim(); ano=ano.trim();
+
+  if(!nome||!ano){
+    if(feedback) feedback.innerHTML="";
+    if(btn){btn.disabled=false;btn.style.opacity="1";}
+    return;
+  }
+
+  var slug=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+ano;
+
+  // Auto-preenche empresa slug se ainda vazio
+  if(empEl&&!empEl.value){
+    empEl.value=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
+  }
+
+  var existe=allClientes.find(function(c){return c.slug===slug;});
+  if(existe){
+    if(feedback) feedback.innerHTML=
+      '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--red-light);border:1px solid #F09595;border-radius:8px;font-size:12px;font-weight:600;color:var(--red)">'+
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M7 4v4M7 9.5v.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+
+        'Projeto "'+existe.nome+'" já cadastrado. Altere o nome ou o ano-base.'+
+      '</div>';
+    if(btn){btn.disabled=true;btn.style.opacity=".45";}
+  } else {
+    if(feedback) feedback.innerHTML=
+      '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--green-light);border:1px solid #C0DD97;border-radius:8px;font-size:12px;font-weight:600;color:var(--green)">'+
+        '<svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.2"/><path d="M4 7l2 2 4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>'+
+        'Slug disponível: <span style="font-family:monospace;font-weight:700;margin-left:3px">'+slug+'</span>'+
+      '</div>';
+    if(btn){btn.disabled=false;btn.style.opacity="1";}
+  }
+}
+
+async function goStep2(){
   wiz.nome=document.getElementById("wiz-nome").value.trim();
   wiz.anoBase=document.getElementById("wiz-ano").value.trim();
   wiz.empresaSlug=document.getElementById("wiz-empresa").value.trim().toLowerCase().replace(/\s+/g,"-");
   wiz.parceiroSlug=document.getElementById("wiz-parceiro").value;
-  if(!wiz.nome||!wiz.anoBase){alert("Preencha o nome e o ano-base.");return;}
+  if(!wiz.nome||!wiz.anoBase){
+    document.getElementById("wiz-slug-feedback").innerHTML=
+      '<div style="display:flex;align-items:center;gap:6px;padding:7px 12px;background:var(--amber-light);border:1px solid #FAC775;border-radius:8px;font-size:12px;font-weight:600;color:var(--amber)">Preencha o nome do cliente e o ano-base.</div>';
+    return;
+  }
+  var slug=wiz.nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+wiz.anoBase;
+  if(allClientes.find(function(c){return c.slug===slug;})) return;
   wiz.step=2; renderWizard();
 }
 
@@ -779,7 +841,14 @@ function renderStep2(pane,footer){
       '<button class="btn-add-small" onclick="addEtapaWiz()">+ Adicionar etapa</button>'+
     '</div>'+
     (wiz.etapas.length===0?'<div class="warn-box">Adicione pelo menos uma etapa para continuar.</div>':'')+
-    '<button class="add-dashed" onclick="copiarDeExistente()">⎘ Copiar etapas de cliente existente</button>'+
+    '<div style="display:flex;align-items:center;gap:10px;margin-top:4px;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px">'+
+      '<span style="font-size:12px;font-weight:600;color:var(--text-sec);white-space:nowrap">⎘ Copiar de cliente:</span>'+
+      '<select class="field-select" id="copiar-de-select" style="flex:1">'+
+        '<option value="">— selecione —</option>'+
+        allClientes.map(function(c){return '<option value="'+c.slug+'">'+c.nome+'</option>';}).join("")+
+      '</select>'+
+      '<button class="btn-add-small" onclick="copiarDeExistente()">Importar etapas</button>'+
+    '</div>'+
   '</div>';
 
   footer.innerHTML='<button class="btn-back" onclick="wiz.step=1;renderWizard()">← Voltar</button><div style="font-size:12px;color:var(--text-hint);font-weight:500">Passo 2 de 4</div><button class="btn-next" onclick="goStep3()">Próximo: Acessos →</button>';
@@ -804,14 +873,12 @@ function removeEtapa(i){
 }
 
 async function copiarDeExistente(){
-  if(!allClientes.length){alert("Nenhum cliente disponível para copiar.");return;}
-  var opts=allClientes.map(function(c){return c.nome;}).join("\n");
-  var nome=prompt("Nome do cliente a copiar (exato):\n\n"+opts);
-  if(!nome) return;
-  var found=allClientes.find(function(c){return c.nome.toLowerCase()===nome.toLowerCase();});
-  if(!found){alert("Cliente não encontrado.");return;}
+  var sel=document.getElementById("copiar-de-select");
+  if(!sel||!sel.value){alert("Selecione um cliente para copiar.");return;}
+  var slug=sel.value;
   try{
-    var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+found.slug+"&order=ordem.asc&select=nome,grupo,periodo");
+    var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc&select=nome,grupo,periodo");
+    if(!etapas||!etapas.length){alert("Este cliente não possui etapas cadastradas.");return;}
     wiz.etapas=etapas.map(function(e){return {nome:e.nome,grupo:e.grupo||"tecnico",periodo:e.periodo||""};});
     renderWizard();
   }catch(e){alert("Erro ao copiar: "+e.message);}
