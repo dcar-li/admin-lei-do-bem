@@ -21,20 +21,27 @@
 }
 body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Quicksand',sans-serif}
 
-.login-wrap{min-height:100vh;background:var(--dcarli-dark);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden}
+.login-wrap{min-height:100vh;background:linear-gradient(135deg,#1a1f0e 0%,#1e2d14 40%,#2a3a1a 70%,#1a1f0e 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;position:relative;overflow:hidden}
 .login-circle{position:absolute;border-radius:50%;border:1px solid rgba(204,214,80,0.08)}
 .login-card{background:#fff;border-radius:16px;padding:2.5rem;width:100%;max-width:360px;position:relative;z-index:1}
-.login-logo{text-align:center;margin-bottom:1.5rem}
-.login-logo img{height:40px;object-fit:contain}
-.login-title{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;text-align:center}
-.login-sub{font-size:13px;color:var(--text-sec);margin-bottom:1.5rem;text-align:center;font-weight:500}
+.login-logo{text-align:center;margin-bottom:1rem}
+.login-logo img{height:56px;object-fit:contain}
+.login-logo-divider{display:flex;align-items:center;gap:8px;margin:1rem 0 .5rem}
+.login-logo-divider-line{flex:1;height:1px;background:#e2e1db}
+.login-logo-divider-text{font-size:10px;font-weight:700;color:#9e9e9a;text-transform:uppercase;letter-spacing:.8px;white-space:nowrap}
+.login-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:4px;text-align:center}
+.login-sub{font-size:12px;color:var(--text-sec);margin-bottom:1.5rem;text-align:center;font-weight:500}
 .login-label{font-size:12px;font-weight:600;color:var(--text-sec);margin-bottom:5px;display:block}
 .login-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-size:14px;background:var(--bg);color:var(--text);font-family:'Quicksand',sans-serif;margin-bottom:12px;font-weight:500}
 .login-input:focus{outline:none;border-color:var(--dcarli)}
-.login-btn{width:100%;padding:10px;background:var(--dcarli);color:var(--dcarli-dark);border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:'Quicksand',sans-serif}
+.login-btn{width:100%;padding:10px;background:linear-gradient(135deg,#CCD650,#a8b030);color:#1a1f0e;border:none;border-radius:var(--radius);font-size:14px;font-weight:700;cursor:pointer;font-family:'Quicksand',sans-serif;box-shadow:0 4px 12px rgba(204,214,80,0.25)}
 .login-btn:hover{opacity:.9}
 .login-btn:disabled{opacity:.5;cursor:not-allowed}
 .login-err{font-size:12px;color:var(--red);margin-top:8px;display:none;font-weight:500}
+.login-forgot{text-align:center;margin-top:10px;font-size:11px;color:#9e9e9a;font-weight:500}
+.login-forgot a{color:var(--dcarli-text);font-weight:700;text-decoration:none;cursor:pointer}
+.login-forgot a:hover{text-decoration:underline}
+.login-reset-ok{font-size:12px;color:var(--green);margin-top:8px;display:none;line-height:1.5;background:var(--green-light);padding:8px 10px;border-radius:8px;font-weight:500;text-align:center}
 .login-footer{margin-top:1.5rem;text-align:center;position:relative;z-index:1}
 .login-footer span{font-size:11px;color:rgba(204,214,80,0.4);font-weight:600}
 
@@ -158,7 +165,12 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Quicks
       <img src="https://ywckzclxdbhlbgqpmtvc.supabase.co/storage/v1/object/public/template/logos/DC_logo_cor.png" alt="DCarli" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"/>
       <div style="display:none;font-size:18px;font-weight:700;color:var(--dcarli-text)">DCarli</div>
     </div>
-    <div class="login-title">Painel Administrativo</div>
+    <div class="login-logo-divider">
+      <div class="login-logo-divider-line"></div>
+      <div class="login-logo-divider-text">Painel Admin</div>
+      <div class="login-logo-divider-line"></div>
+    </div>
+    <div class="login-title">Acesso administrativo</div>
     <div class="login-sub">Lei do Bem — Acesso restrito</div>
     <label class="login-label">E-mail</label>
     <input class="login-input" type="email" id="login-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
@@ -166,6 +178,8 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Quicks
     <input class="login-input" type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
     <div class="login-err" id="login-err">E-mail ou senha incorretos.</div>
     <button class="login-btn" id="login-btn" onclick="doLogin()">Entrar</button>
+    <div class="login-forgot">Esqueceu a senha? <a onclick="doAdminReset()">Redefinir acesso</a></div>
+    <div class="login-reset-ok" id="login-reset-ok">E-mail de redefinição enviado! Verifique sua caixa de entrada.</div>
   </div>
   <div class="login-footer"><span>Powered by <strong style="color:rgba(204,214,80,0.6)">DCarli</strong></span></div>
 </div>
@@ -328,6 +342,28 @@ function switchTab(tab) {
   if(tab==="historico") populateHistEmpresas();
 }
 
+async function doAdminReset(){
+  var email=document.getElementById("login-email").value.trim();
+  if(!email){
+    document.getElementById("login-err").textContent="Digite seu e-mail antes de redefinir a senha.";
+    document.getElementById("login-err").style.display="block";
+    return;
+  }
+  try{
+    await fetch(SUPABASE_URL+"/auth/v1/recover",{
+      method:"POST",
+      headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},
+      body:JSON.stringify({email:email})
+    });
+    document.getElementById("login-err").style.display="none";
+    document.getElementById("login-reset-ok").style.display="block";
+    setTimeout(function(){document.getElementById("login-reset-ok").style.display="none";},5000);
+  }catch(e){
+    document.getElementById("login-err").textContent="Erro ao enviar e-mail. Tente novamente.";
+    document.getElementById("login-err").style.display="block";
+  }
+}
+
 async function doLogin() {
   var email=document.getElementById("login-email").value.trim();
   var pass=document.getElementById("login-password").value;
@@ -362,7 +398,7 @@ async function loadAllClientes() {
   sel.innerHTML='<option value="">Selecione um cliente...</option>';
   allClientes.forEach(function(c){
     var opt=document.createElement("option");
-    opt.value=c.slug; opt.textContent=c.nome+" "+c.ano_base;
+    opt.value=c.slug; opt.textContent=c.nome;
     sel.appendChild(opt);
   });
 }
@@ -581,7 +617,7 @@ async function loadMctiList() {
       var opts=MCTI_OPTIONS.map(function(o){return '<option value="'+o.val+'"'+(cur===o.val?" selected":"")+'>'+o.label+'</option>';}).join("");
       return '<div class="mcti-bar">'+
         '<div class="mcti-dot" id="md-'+c.slug+'" style="background:'+getMctiColor(cur)+'"></div>'+
-        '<label>'+c.nome+' '+c.ano_base+'</label>'+
+        '<label>'+c.nome+'</label>'+
         '<select class="mcti-select" onchange="updateMcti(\''+c.slug+'\',this)">'+opts+'</select>'+
       '</div>';
     }).join("");
