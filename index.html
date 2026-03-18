@@ -341,7 +341,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Quicks
 const SUPABASE_URL = "https://ywckzclxdbhlbgqpmtvc.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Y2t6Y2x4ZGJobGJncXBtdHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzgwNTksImV4cCI6MjA4OTI1NDA1OX0.Cfxbis5sgn2pT7mnULlEfqW1In1OmDBxUUTHsP3H3Og";
 
-var accessToken = null;
+var accessToken = sessionStorage.getItem("admin_token") || null;
 var allClientes = [];
 var allParceiros = [];
 var currentHistEmpresa = null;
@@ -465,10 +465,8 @@ async function doLogin(){
     var data=await res.json();
     if(!res.ok) throw new Error("invalido");
     accessToken=data.access_token;
-    document.getElementById("login-screen").style.display="none";
-    document.getElementById("admin-screen").style.display="block";
-    await loadAllClientes();
-    allParceiros=await api("/rest/v1/parceiros?select=slug,nome&order=nome.asc");
+    sessionStorage.setItem("admin_token", accessToken);
+    await initAdmin();
   }catch(e){err.style.display="block";btn.disabled=false;btn.textContent="Entrar";accessToken=null;}
 }
 
@@ -485,11 +483,19 @@ async function doAdminReset(){
 
 function doLogout(){
   accessToken=null;
+  sessionStorage.removeItem("admin_token");
   document.getElementById("admin-screen").style.display="none";
   document.getElementById("login-screen").style.display="flex";
   document.getElementById("login-password").value="";
   document.getElementById("login-btn").disabled=false;
   document.getElementById("login-btn").textContent="Entrar";
+}
+
+async function initAdmin(){
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("admin-screen").style.display="block";
+  await loadAllClientes();
+  allParceiros=await api("/rest/v1/parceiros?select=slug,nome&order=nome.asc");
 }
 
 async function loadAllClientes(){
@@ -769,12 +775,9 @@ function onWizIdentInput(){
 
   var slug=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+ano;
 
-  // Auto-preenche empresa slug sempre que nome mudar (se não foi editado manualmente)
-  if(empEl){
-    var slugEmpresa=nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
-    // Só sobrescreve se estiver vazio ou se ainda bate com um slug gerado automaticamente
-    var anterior=wiz._empresaManual;
-    if(!anterior) empEl.value=slugEmpresa;
+  // Auto-preenche empresa slug sempre sincronizado com o nome, a menos que editado manualmente
+  if(empEl && !wiz._empresaManual){
+    empEl.value = nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"");
   }
 
   var existe=allClientes.find(function(c){return c.slug===slug;});
@@ -1129,7 +1132,20 @@ async function deleteItem(itemId){
     var sel = document.getElementById("client-select");
     if(sel && sel.value) loadClient();
   }catch(e){ showSave("error"); alert("Erro: "+e.message); }
-}
+}// Restaura sessão ao recarregar a página
+(async function(){
+  if(accessToken){
+    try{
+      // Valida token com uma chamada leve
+      await api("/rest/v1/parceiros?select=slug&limit=1");
+      await initAdmin();
+    }catch(e){
+      // Token expirado — volta ao login
+      accessToken=null;
+      sessionStorage.removeItem("admin_token");
+    }
+  }
+})();
 </script>
 </body>
 </html>
