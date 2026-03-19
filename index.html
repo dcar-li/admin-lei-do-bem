@@ -511,6 +511,16 @@ async function loadClient(){
   document.getElementById("dashboard").style.display="none";
   document.getElementById("empty-state").style.display="none";
   document.getElementById("main-loading").style.display="block";
+
+      // Memoriza as etapas abertas para não fechá-las após o recarregamento
+    var openStages = [];
+    document.querySelectorAll('.stage-body.open').forEach(function(el) { openStages.push(el.id); });
+
+    try{
+        var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
+        var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
+        window.itensCache = itens; // Salva globalmente para os cálculos de data funcionarem
+
   try{
     var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
     var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
@@ -547,13 +557,60 @@ async function loadClient(){
         var ss=stageStatus(ea),col=sc(ss);
         var autoOpen=ss==="in-progress"||ss==="delayed";
         var p=parsePeriodo(etapa.periodo);
-        var periodoHTML='<div class="periodo-wrap" onclick="event.stopPropagation()">'+
-          periodoSel(etapa.id,"mesI",p.mI)+'<span class="periodo-sep"> </span>'+periodoSel(etapa.id,"anoI",p.yI);
-        if(p.mF>=0) periodoHTML+='<span class="periodo-sep">–</span>'+periodoSel(etapa.id,"mesF",p.mF)+'<span class="periodo-sep"> </span>'+periodoSel(etapa.id,"anoF",p.yF);
-        periodoHTML+='</div>';
+        
+        // NOVO: Exibe datas reais do banco como textos estáticos, ao invés de seletores
+        var dtInR = etapa.data_inicio_real ? new Date(etapa.data_inicio_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
+        var dtFimR = etapa.data_fim_real ? new Date(etapa.data_fim_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
+        var periodoDisplay = (dtInR && dtFimR) ? (dtInR + " a " + dtFimR) : (etapa.periodo || "Sem datas");
+        
+        var periodoHTML='<div class="periodo-wrap" style="font-size: 11px; color: var(--text-hint); font-weight: 600;">' + periodoDisplay + '</div>';
+
         var card=document.createElement("div");
         card.className="stage-card";
         var ativHtml = ea.map(function(t){
+            var tc = sc(t.status);
+            var depOptions = '<option value="">Sem dependência</option>';
+            ea.forEach(function(outra) {
+                if(outra.id !== t.id) {
+                    var selected = (t.depende_de_id == outra.id) ? " selected" : "";
+                    depOptions += '<option value="'+outra.id+'"'+selected+'>'+outra.nome+'</option>';
+                }
+            });
+
+            var dtInicio = t.data_inicio ? t.data_inicio : "";
+            var dtFimStr = t.data_fim ? new Date(t.data_fim + "T00:00:00").toLocaleDateString('pt-BR') : "—";
+            var duracao = t.duracao_semanas || 1; // Padrão 1 semana
+
+            return '<div class="item-row" style="flex-wrap: wrap;">' +
+                '<div class="item-dot" style="background:'+tc.dot+'"></div>' +
+                '<input type="text" class="item-name" style="border:none; background:transparent; outline:none; flex:1; min-width: 150px;" value="'+t.nome+'" onblur="editItemName('+t.id+', this)" />' +
+                
+                '<div style="display: flex; gap: 6px; align-items: center;">' +
+                    '<span style="font-size: 10px; color: var(--text-hint);">Início:</span>' +
+                    // Dispara a nova lógica matemática
+                    '<input type="date" style="font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+dtInicio+'" onchange="updateActivityLogic('+t.id+', \'data_inicio\', this.value)" />' +
+                    
+                    '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Semanas:</span>' +
+                    // Novo campo de duração de semanas
+                    '<input type="number" min="1" style="font-size: 11px; padding: 2px 4px; width:45px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+duracao+'" onchange="updateActivityLogic('+t.id+', \'duracao_semanas\', this.value)" />' +
+                    
+                    // A Data Fim agora é só um rótulo em negrito
+                    '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Fim: <strong style="color:var(--text)">'+dtFimStr+'</strong></span>' +
+                '</div>' +
+                
+                '<select style="font-size: 11px; padding: 3px; border: 1px solid var(--border); border-radius: 4px; max-width: 120px; background: var(--surface); color: var(--text);" onchange="updateActivityLogic('+t.id+', \'depende_de_id\', this.value)">' +
+                    depOptions +
+                '</select>' +
+                
+                '<select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)">' +
+                    '<option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option>' +
+                    '<option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option>' +
+                    '<option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option>' +
+                    '<option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option>' +
+                '</select>' +
+                '<button onclick="deleteItem('+t.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button>' +
+            '</div>';
+        }).join("");
     var tc = sc(t.status);
     
     // 1. Gera as opções de dependência (lista outras atividades da mesma etapa)
@@ -1138,7 +1195,16 @@ async function criarProjeto(){
             sel.value = slug;
             loadClient();
         }, 2000); 
+      // === RESTAURA O ESTADO DAS ETAPAS ABERTAS ===
+        openStages.forEach(function(id) {
+            var b = document.getElementById(id);
+            var c = document.getElementById(id.replace("body-", "chev-"));
+            if(b) b.classList.add("open");
+            if(c) c.style.transform = "rotate(180deg)";
+        });
 
+        document.getElementById("main-loading").style.display="none";
+        document.getElementById("dashboard").style.display="block";
     } catch(e) { 
         // Se der erro aqui, nada foi salvo no banco, garantindo a integridade dos dados!
         result.innerHTML = '<div class="error-box">Erro ao criar: '+e.message+'</div>'; 
@@ -1213,6 +1279,68 @@ async function editItemName(itemId, inputElement) {
     } catch(e) {
         showSave("error");
         alert("Erro ao editar nome: " + e.message);
+    }
+}
+
+// Lógica inteligente de Segunda a Sexta e Dependências
+async function updateActivityLogic(itemId, campo, valor) {
+    showSave("saving");
+    try {
+        // Busca as informações do item atual no cache
+        var currentItem = window.itensCache.find(a => a.id === itemId);
+        if(!currentItem) throw new Error("Item não encontrado no cache");
+
+        var novaDuracao = currentItem.duracao_semanas || 1;
+        var novaDataInicio = currentItem.data_inicio;
+        var novaDependencia = currentItem.depende_de_id;
+
+        // Atualiza a variável que o usuário acabou de modificar
+        if (campo === 'duracao_semanas') novaDuracao = valor ? parseInt(valor) : 1;
+        if (campo === 'data_inicio') novaDataInicio = valor;
+        if (campo === 'depende_de_id') novaDependencia = valor;
+
+        var payload = {};
+        payload[campo] = valor === "" ? null : valor;
+
+        // Regra 1: Se incluiu dependência, pega a data final dela e soma 3 dias
+        if (campo === 'depende_de_id' && valor) {
+            var depItem = window.itensCache.find(a => a.id == valor);
+            if (depItem && depItem.data_fim) {
+                var dFimDep = new Date(depItem.data_fim + "T00:00:00");
+                dFimDep.setDate(dFimDep.getDate() + 3); // Sexta + 3 = Segunda
+                novaDataInicio = dFimDep.toISOString().split('T');
+                payload['data_inicio'] = novaDataInicio;
+            }
+        }
+
+        // Regra 2: Força Início para Segunda e calcula o Fim na Sexta
+        if (novaDataInicio) {
+            var dIni = new Date(novaDataInicio + "T00:00:00");
+            var day = dIni.getDay();
+            // Calcula a diferença para cair na segunda-feira
+            var diff = dIni.getDate() - day + (day === 0 ? -6 : 1); 
+            dIni.setDate(diff);
+
+            novaDataInicio = dIni.toISOString().split('T');
+            payload['data_inicio'] = novaDataInicio;
+
+            // Fim = Início + (semanas * 7) - 3 dias (para cair na sexta)
+            var dFim = new Date(dIni.getTime());
+            dFim.setDate(dFim.getDate() + (novaDuracao * 7) - 3);
+            
+            payload['data_fim'] = dFim.toISOString().split('T');
+            payload['duracao_semanas'] = novaDuracao;
+        }
+
+        // Salva no banco e recarrega a página de forma silenciosa
+        await api("/rest/v1/itens?id=eq." + itemId, "PATCH", payload);
+        showSave("saved");
+        var sel = document.getElementById("client-select");
+        if(sel && sel.value) loadClient();
+
+    } catch(e) {
+        showSave("error");
+        alert("Erro ao calcular datas: " + e.message);
     }
 }
 
