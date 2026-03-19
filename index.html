@@ -506,183 +506,170 @@ async function loadAllClientes(){
 }
 
 async function loadClient(){
-  var slug=document.getElementById("client-select").value;
-  if(!slug){document.getElementById("dashboard").style.display="none";document.getElementById("empty-state").style.display="block";return;}
-  document.getElementById("dashboard").style.display="none";
-  document.getElementById("empty-state").style.display="none";
-  document.getElementById("main-loading").style.display="block";
+    var slug = document.getElementById("client-select").value;
+    if(!slug){
+        document.getElementById("dashboard").style.display="none";
+        document.getElementById("empty-state").style.display="block";
+        return;
+    }
 
-      // Memoriza as etapas abertas para não fechá-las após o recarregamento
+    document.getElementById("dashboard").style.display="none";
+    document.getElementById("empty-state").style.display="none";
+    document.getElementById("main-loading").style.display="block";
+
+    // Memoriza as etapas abertas para não fechá-las após o recarregamento
     var openStages = [];
     document.querySelectorAll('.stage-body.open').forEach(function(el) { openStages.push(el.id); });
 
-    try{
-        var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
-        var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
+    try {
+        var etapas = await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
+        var itens = await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
         window.itensCache = itens; // Salva globalmente para os cálculos de data funcionarem
 
-  
-    var atividades=itens.filter(function(i){return i.tipo==="atividade";});
-    var documentos=itens.filter(function(i){return i.tipo==="documento";});
-  
-    var totalAtiv=atividades.length;
-    var doneAtiv=atividades.filter(function(a){return a.status==="done";}).length;
-    var pct=totalAtiv?Math.round(doneAtiv/totalAtiv*100):0;
-    var pendDocs=documentos.filter(function(d){return d.status==="pending";}).length;
-    var doneStages=etapas.filter(function(e){var ea=atividades.filter(function(a){return a.etapa_id===e.id;});return stageStatus(ea)==="done";}).length;
-    document.getElementById("prog-pct").textContent=pct+"%";
-    document.getElementById("prog-fill").style.width=pct+"%";
-    document.getElementById("met-pct").textContent=pct+"%";
-    document.getElementById("met-tasks").textContent=doneAtiv+" de "+totalAtiv+" atividades";
-    document.getElementById("met-stages").textContent=doneStages;
-    document.getElementById("met-stages-total").textContent="de "+etapas.length+" etapas";
-    document.getElementById("met-docs").textContent=pendDocs;
-    var list=document.getElementById("stages-list");
-    list.innerHTML="";
-    ["contabil","tecnico","mcti"].forEach(function(gk){
-      var g=GRUPOS_INFO[gk];
-      var etG=etapas.filter(function(e){return e.grupo===gk;});
-      if(!etG.length) return;
-      var doneG=etG.filter(function(e){var ea=atividades.filter(function(a){return a.etapa_id===e.id;});return stageStatus(ea)==="done";}).length;
-      var pctG=Math.round(doneG/etG.length*100);
-      var sec=document.createElement("div");
-      sec.className="grupo-section";
-      sec.innerHTML='<div class="grupo-header"><div class="grupo-icon" style="background:'+g.bg+'">'+g.icon+'</div><div><div class="grupo-label">'+g.label+'</div><div class="grupo-sub">'+g.sub+'</div></div><span class="grupo-pct">'+pctG+'%</span></div><div class="stages" id="stages-'+gk+'"></div>';
-      list.appendChild(sec);
-      var stCont=sec.querySelector("#stages-"+gk);
-      etG.forEach(function(etapa,si){
-        var ea=atividades.filter(function(a){return a.etapa_id===etapa.id;});
-        var ed=documentos.filter(function(d){return d.etapa_id===etapa.id;});
-        var ss=stageStatus(ea),col=sc(ss);
-        var autoOpen=ss==="in-progress"||ss==="delayed";
-        var p=parsePeriodo(etapa.periodo);
-        
-        // NOVO: Exibe datas reais do banco como textos estáticos, ao invés de seletores
-        var dtInR = etapa.data_inicio_real ? new Date(etapa.data_inicio_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
-        var dtFimR = etapa.data_fim_real ? new Date(etapa.data_fim_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
-        var periodoDisplay = (dtInR && dtFimR) ? (dtInR + " a " + dtFimR) : (etapa.periodo || "Sem datas");
-        
-        var periodoHTML='<div class="periodo-wrap" style="font-size: 11px; color: var(--text-hint); font-weight: 600;">' + periodoDisplay + '</div>';
+        var atividades = itens.filter(function(i){return i.tipo==="atividade";});
+        var documentos = itens.filter(function(i){return i.tipo==="documento";});
 
-        var card=document.createElement("div");
-        card.className="stage-card";
-        var ativHtml = ea.map(function(t){
-            var tc = sc(t.status);
-            var depOptions = '<option value="">Sem dependência</option>';
-            ea.forEach(function(outra) {
-                if(outra.id !== t.id) {
-                    var selected = (t.depende_de_id == outra.id) ? " selected" : "";
-                    depOptions += '<option value="'+outra.id+'"'+selected+'>'+outra.nome+'</option>';
+        var totalAtiv = atividades.length;
+        var doneAtiv = atividades.filter(function(a){return a.status==="done";}).length;
+        var pct = totalAtiv ? Math.round(doneAtiv/totalAtiv*100) : 0;
+        var pendDocs = documentos.filter(function(d){return d.status==="pending";}).length;
+        var doneStages = etapas.filter(function(e){
+            var ea = atividades.filter(function(a){return a.etapa_id===e.id;});
+            return stageStatus(ea)==="done";
+        }).length;
+
+        document.getElementById("prog-pct").textContent = pct+"%";
+        document.getElementById("prog-fill").style.width = pct+"%";
+        document.getElementById("met-pct").textContent = pct+"%";
+        document.getElementById("met-tasks").textContent = doneAtiv+" de "+totalAtiv+" atividades";
+        document.getElementById("met-stages").textContent = doneStages;
+        document.getElementById("met-stages-total").textContent = "de "+etapas.length+" etapas";
+        document.getElementById("met-docs").textContent = pendDocs;
+
+        var list = document.getElementById("stages-list");
+        list.innerHTML = "";
+
+        ["contabil","tecnico","mcti"].forEach(function(gk){
+            var g = GRUPOS_INFO[gk];
+            var etG = etapas.filter(function(e){return e.grupo===gk;});
+            if(!etG.length) return;
+
+            var doneG = etG.filter(function(e){
+                var ea = atividades.filter(function(a){return a.etapa_id===e.id;});
+                return stageStatus(ea)==="done";
+            }).length;
+            var pctG = Math.round(doneG/etG.length*100);
+
+            var sec = document.createElement("div");
+            sec.className = "grupo-section";
+            sec.innerHTML = '<div class="grupo-header"><div class="grupo-icon" style="background:'+g.bg+'">'+g.icon+'</div><div><div class="grupo-label">'+g.label+'</div><div class="grupo-sub">'+g.sub+'</div></div><span class="grupo-pct">'+pctG+'%</span></div><div class="stages" id="stages-'+gk+'"></div>';
+            list.appendChild(sec);
+
+            var stCont = sec.querySelector("#stages-"+gk);
+
+            etG.forEach(function(etapa,si){
+                var ea = atividades.filter(function(a){return a.etapa_id===etapa.id;});
+                var ed = documentos.filter(function(d){return d.etapa_id===etapa.id;});
+
+                var ss = stageStatus(ea), col = sc(ss);
+                var autoOpen = (ss==="in-progress" || ss==="delayed");
+
+                var dtInR = etapa.data_inicio_real ? new Date(etapa.data_inicio_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
+                var dtFimR = etapa.data_fim_real ? new Date(etapa.data_fim_real+"T00:00:00").toLocaleDateString('pt-BR') : "";
+                var periodoDisplay = (dtInR && dtFimR) ? (dtInR + " a " + dtFimR) : (etapa.periodo || "Sem datas");
+                var periodoHTML = '<div class="periodo-wrap" style="font-size: 11px; color: var(--text-hint); font-weight: 600;">' + periodoDisplay + '</div>';
+
+                var card = document.createElement("div");
+                card.className = "stage-card";
+
+                var ativHtml = ea.map(function(t){
+                    var tc = sc(t.status);
+                    var depOptions = '<option value="">Sem dependência</option>';
+                    ea.forEach(function(outra) {
+                        if(outra.id !== t.id) {
+                            var selected = (t.depende_de_id == outra.id) ? " selected" : "";
+                            depOptions += '<option value="'+outra.id+'"'+selected+'>'+outra.nome+'</option>';
+                        }
+                    });
+
+                    var dtInicio = t.data_inicio ? t.data_inicio : "";
+                    var dtFimStr = t.data_fim ? new Date(t.data_fim + "T00:00:00").toLocaleDateString('pt-BR') : "—";
+                    var duracao = t.duracao_semanas || 1; // Padrão 1 semana
+
+                    return '<div class="item-row" style="flex-wrap: wrap;">' +
+                        '<div class="item-dot" style="background:'+tc.dot+'"></div>' +
+                        '<input type="text" class="item-name" style="border:none; background:transparent; outline:none; flex:1; min-width: 150px;" value="'+t.nome+'" onblur="editItemName('+t.id+', this)" />' +
+
+                        '<div style="display: flex; gap: 6px; align-items: center;">' +
+                            '<span style="font-size: 10px; color: var(--text-hint);">Início:</span>' +
+                            '<input type="date" style="font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+dtInicio+'" onchange="updateActivityLogic('+t.id+', \'data_inicio\', this.value)" />' +
+                            '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Semanas:</span>' +
+                            '<input type="number" min="1" style="font-size: 11px; padding: 2px 4px; width:45px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+duracao+'" onchange="updateActivityLogic('+t.id+', \'duracao_semanas\', this.value)" />' +
+                            '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Fim: <strong style="color:var(--text)">'+dtFimStr+'</strong></span>' +
+                        '</div>' +
+
+                        '<select style="font-size: 11px; padding: 3px; border: 1px solid var(--border); border-radius: 4px; max-width: 120px; background: var(--surface); color: var(--text);" onchange="updateActivityLogic('+t.id+', \'depende_de_id\', this.value)">' +
+                            depOptions +
+                        '</select>' +
+
+                        '<select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)">' +
+                            '<option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option>' +
+                            '<option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option>' +
+                            '<option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option>' +
+                            '<option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option>' +
+                        '</select>' +
+                        '<button onclick="deleteItem('+t.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button>' +
+                    '</div>';
+                }).join("");
+
+                var addAtivBtn = '<button class="add-dashed" id="add-btn-'+etapa.id+'-atividade" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'atividade\',\''+slug+'\')">+ atividade</button>';
+
+                var docHtml = "";
+                if(ed.length){
+                    docHtml = '<div class="section-label">Documentos</div>'+ed.map(function(d){
+                        var dc = sc(d.status);
+                        var dlB = d.arquivo_url ? '<span class="dl-badge">Template ↓</span>' : "";
+                        return '<div class="item-row"><div class="item-dot" style="background:'+dc.dot+'"></div><span class="item-name">'+d.nome+'</span>'+dlB+'<select class="status-select '+d.status+'" onchange="updateStatus(\'itens\','+d.id+',this)"><option value="pending"'+(d.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(d.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(d.status==="done"?" selected":"")+'>Recebido</option><option value="delayed"'+(d.status==="delayed"?" selected":"")+'>Em atraso</option></select><button onclick="deleteItem('+d.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button></div>';
+                    }).join("");
+                }
+                var addDocBtn = '<button class="add-dashed" id="add-btn-'+etapa.id+'-documento" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'documento\',\''+slug+'\')">+ documento</button>';
+
+                card.innerHTML = '<div class="stage-header" onclick="toggleStage(\''+si+'-'+gk+'\')">'+
+                    '<div class="stage-num" style="background:'+col.bg+';color:'+col.text+'">'+String(si+1).padStart(2,"0")+'</div>'+
+                    '<div class="stage-info"><div class="stage-name">'+etapa.nome+'</div></div>'+
+                    periodoHTML+
+                    '<span class="badge" style="background:'+col.bg+';color:'+col.text+'">'+col.label+'</span>'+
+                    '<span class="chev" id="chev-'+si+'-'+gk+'">▼</span>'+
+                    '</div>'+
+                    '<div class="stage-body'+(autoOpen?" open":"")+'" id="body-'+si+'-'+gk+'">'+
+                    '<div class="stage-inner"><div class="section-label">Atividades</div>'+ativHtml+addAtivBtn+docHtml+(ed.length?addDocBtn:'<div class="section-label" style="margin-top:10px">Documentos</div>'+addDocBtn)+
+                    '<div class="note-row"><div class="note-label">Observação</div><textarea class="note-input" placeholder="Observação visível ao cliente..." onblur="updateNote('+etapa.id+',this)">'+(etapa.observacao||"")+'</textarea></div>'+
+                    '</div></div>';
+
+                stCont.appendChild(card);
+                if(autoOpen){
+                    var ch = document.getElementById("chev-"+si+"-"+gk);
+                    if(ch) ch.style.transform="rotate(180deg)";
                 }
             });
+        });
 
-            var dtInicio = t.data_inicio ? t.data_inicio : "";
-            var dtFimStr = t.data_fim ? new Date(t.data_fim + "T00:00:00").toLocaleDateString('pt-BR') : "—";
-            var duracao = t.duracao_semanas || 1; // Padrão 1 semana
+        // Restaura o estado das etapas abertas
+        openStages.forEach(function(id) {
+            var b = document.getElementById(id);
+            var c = document.getElementById(id.replace("body-", "chev-"));
+            if(b) b.classList.add("open");
+            if(c) c.style.transform = "rotate(180deg)";
+        });
 
-            return '<div class="item-row" style="flex-wrap: wrap;">' +
-                '<div class="item-dot" style="background:'+tc.dot+'"></div>' +
-                '<input type="text" class="item-name" style="border:none; background:transparent; outline:none; flex:1; min-width: 150px;" value="'+t.nome+'" onblur="editItemName('+t.id+', this)" />' +
-                
-                '<div style="display: flex; gap: 6px; align-items: center;">' +
-                    '<span style="font-size: 10px; color: var(--text-hint);">Início:</span>' +
-                    // Dispara a nova lógica matemática
-                    '<input type="date" style="font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+dtInicio+'" onchange="updateActivityLogic('+t.id+', \'data_inicio\', this.value)" />' +
-                    
-                    '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Semanas:</span>' +
-                    // Novo campo de duração de semanas
-                    '<input type="number" min="1" style="font-size: 11px; padding: 2px 4px; width:45px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+duracao+'" onchange="updateActivityLogic('+t.id+', \'duracao_semanas\', this.value)" />' +
-                    
-                    // A Data Fim agora é só um rótulo em negrito
-                    '<span style="font-size: 10px; color: var(--text-hint); margin-left:4px;">Fim: <strong style="color:var(--text)">'+dtFimStr+'</strong></span>' +
-                '</div>' +
-                
-                '<select style="font-size: 11px; padding: 3px; border: 1px solid var(--border); border-radius: 4px; max-width: 120px; background: var(--surface); color: var(--text);" onchange="updateActivityLogic('+t.id+', \'depende_de_id\', this.value)">' +
-                    depOptions +
-                '</select>' +
-                
-                '<select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)">' +
-                    '<option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option>' +
-                    '<option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option>' +
-                    '<option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option>' +
-                    '<option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option>' +
-                '</select>' +
-                '<button onclick="deleteItem('+t.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button>' +
-            '</div>';
-        }).join("");
-    var tc = sc(t.status);
-    
-    // 1. Gera as opções de dependência (lista outras atividades da mesma etapa)
-    var depOptions = '<option value="">Sem dependência</option>';
-    ea.forEach(function(outra) {
-        if(outra.id !== t.id) { // Não permite depender de si mesma
-            var selected = (t.depende_de_id == outra.id) ? " selected" : "";
-            depOptions += '<option value="'+outra.id+'"'+selected+'>'+outra.nome+'</option>';
-        }
-    });
+        document.getElementById("main-loading").style.display="none";
+        document.getElementById("dashboard").style.display="block";
 
-    // 2. Prepara as datas (trata caso venham vazias do banco)
-    var dtInicio = t.data_inicio ? t.data_inicio : "";
-    var dtFim = t.data_fim ? t.data_fim : "";
-
-    // 3. Retorna o novo HTML estruturado da subatividade
-    return '<div class="item-row" style="flex-wrap: wrap;">' +
-        '<div class="item-dot" style="background:'+tc.dot+'"></div>' +
-        
-        // Campo Editável para o Nome
-        '<input type="text" class="item-name" style="border:none; background:transparent; outline:none; flex:1; min-width: 150px;" value="'+t.nome+'" onblur="editItemName('+t.id+', this)" />' +
-        
-        // Campos de Data
-        '<div style="display: flex; gap: 4px; align-items: center;">' +
-            '<span style="font-size: 10px; color: var(--text-hint);">Início:</span>' +
-            '<input type="date" style="font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+dtInicio+'" onchange="updateItemField('+t.id+', \'data_inicio\', this.value)" />' +
-            '<span style="font-size: 10px; color: var(--text-hint);">Fim:</span>' +
-            '<input type="date" style="font-size: 11px; padding: 2px 4px; border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--text);" value="'+dtFim+'" onchange="updateItemField('+t.id+', \'data_fim\', this.value)" />' +
-        '</div>' +
-        
-        // Select de Dependência
-        '<select style="font-size: 11px; padding: 3px; border: 1px solid var(--border); border-radius: 4px; max-width: 120px; background: var(--surface); color: var(--text);" onchange="updateItemField('+t.id+', \'depende_de_id\', this.value)">' +
-            depOptions +
-        '</select>' +
-        
-        // Select de Status (Original)
-        '<select class="status-select '+t.status+'" onchange="updateStatus(\'itens\','+t.id+',this)">' +
-            '<option value="pending"'+(t.status==="pending"?" selected":"")+'>Pendente</option>' +
-            '<option value="in-progress"'+(t.status==="in-progress"?" selected":"")+'>Em andamento</option>' +
-            '<option value="done"'+(t.status==="done"?" selected":"")+'>Concluído</option>' +
-            '<option value="delayed"'+(t.status==="delayed"?" selected":"")+'>Em atraso</option>' +
-        '</select>' +
-        
-        // Botão de Remover (Original)
-        '<button onclick="deleteItem('+t.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button>' +
-    '</div>';
-}).join("");
-        var addAtivBtn='<button class="add-dashed" id="add-btn-'+etapa.id+'-atividade" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'atividade\',\''+slug+'\')">+ atividade</button>';
-        var docHtml="";
-        if(ed.length){docHtml='<div class="section-label">Documentos</div>'+ed.map(function(d){var dc=sc(d.status);var dlB=d.arquivo_url?'<span class="dl-badge">Template ↓</span>':"";return '<div class="item-row"><div class="item-dot" style="background:'+dc.dot+'"></div><span class="item-name">'+d.nome+'</span>'+dlB+'<select class="status-select '+d.status+'" onchange="updateStatus(\'itens\','+d.id+',this)"><option value="pending"'+(d.status==="pending"?" selected":"")+'>Pendente</option><option value="in-progress"'+(d.status==="in-progress"?" selected":"")+'>Em andamento</option><option value="done"'+(d.status==="done"?" selected":"")+'>Recebido</option><option value="delayed"'+(d.status==="delayed"?" selected":"")+'>Em atraso</option></select><button onclick="deleteItem('+d.id+')" style="background:none;border:none;color:var(--text-hint);cursor:pointer;font-size:13px;padding:0 4px;margin-left:2px" title="Remover">✕</button></div>';}).join("");}
-        var addDocBtn='<button class="add-dashed" id="add-btn-'+etapa.id+'-documento" style="margin-top:4px;padding:5px;font-size:11px" onclick="showAddItemForm('+etapa.id+',\'documento\',\''+slug+'\')">+ documento</button>';
-        card.innerHTML='<div class="stage-header" onclick="toggleStage(\''+si+'-'+gk+'\')">'+
-          '<div class="stage-num" style="background:'+col.bg+';color:'+col.text+'">'+String(si+1).padStart(2,"0")+'</div>'+
-          '<div class="stage-info"><div class="stage-name">'+etapa.nome+'</div></div>'+
-          periodoHTML+
-          '<span class="badge" style="background:'+col.bg+';color:'+col.text+'">'+col.label+'</span>'+
-          '<span class="chev" id="chev-'+si+'-'+gk+'">▼</span>'+
-          '</div>'+
-          '<div class="stage-body'+(autoOpen?" open":"")+'" id="body-'+si+'-'+gk+'">'+
-          '<div class="stage-inner"><div class="section-label">Atividades</div>'+ativHtml+addAtivBtn+docHtml+(ed.length?addDocBtn:'<div class="section-label" style="margin-top:10px">Documentos</div>'+addDocBtn)+
-          '<div class="note-row"><div class="note-label">Observação</div><textarea class="note-input" placeholder="Observação visível ao cliente..." onblur="updateNote('+etapa.id+',this)">'+(etapa.observacao||"")+'</textarea></div>'+
-          '</div></div>';
-        stCont.appendChild(card);
-        if(autoOpen){var ch=document.getElementById("chev-"+si+"-"+gk);if(ch)ch.style.transform="rotate(180deg)";}
-      });
-    });
-    document.getElementById("main-loading").style.display="none";
-    document.getElementById("dashboard").style.display="block";
-  }catch(e){
-    document.getElementById("main-loading").style.display="none";
-    document.getElementById("stages-list").innerHTML='<div class="error-box">Erro ao carregar: '+e.message+'</div>';
-    document.getElementById("dashboard").style.display="block";
-  }
+    } catch(e) {
+        document.getElementById("main-loading").style.display="none";
+        document.getElementById("stages-list").innerHTML='<div class="error-box">Erro ao carregar: '+e.message+'</div>';
+        document.getElementById("dashboard").style.display="block";
+    }
 }
 
 function toggleStage(id){
