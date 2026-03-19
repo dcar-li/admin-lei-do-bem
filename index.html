@@ -1035,48 +1035,69 @@ var TEMPLATE_ITENS = {
   }
 };
 
-async function criarProjeto(){
-  var btn=document.getElementById("btn-create-final");
-  var result=document.getElementById("create-result");
-  btn.disabled=true;btn.textContent="Criando...";
-  var slug=wiz.nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+wiz.anoBase;
-  var nomeCompleto=wiz.nome+" "+wiz.anoBase;
-  try{
-    // 1. Criar cliente
-    await api("/rest/v1/clientes","POST",{nome:nomeCompleto,ano_base:parseInt(wiz.anoBase),slug:slug,empresa_slug:wiz.empresaSlug});
-    // 2. Criar etapas + atividades/documentos do template
-    for(var i=0;i<wiz.etapas.length;i++){
-      var e=wiz.etapas[i];
-      var etapaRes=await api("/rest/v1/etapas","POST",{cliente_slug:slug,ordem:i+1,nome:e.nome,periodo:e.periodo,status:"pending",grupo:e.grupo,observacao:""});
-      var etapaId=etapaRes&&etapaRes[0]?etapaRes[0].id:null;
-      if(!etapaId) continue;
-      var tpl=TEMPLATE_ITENS[e.grupo];
-      if(!tpl) continue;
-      // Atividades
-      for(var a=0;a<tpl.atividades.length;a++){
-        await api("/rest/v1/itens","POST",{cliente_slug:slug,etapa_id:etapaId,tipo:"atividade",nome:tpl.atividades[a],status:"pending",ordem:a+1,arquivo_url:null});
-      }
-      // Documentos
-      for(var d=0;d<tpl.documentos.length;d++){
-        await api("/rest/v1/itens","POST",{cliente_slug:slug,etapa_id:etapaId,tipo:"documento",nome:tpl.documentos[d].nome,status:"pending",ordem:d+1,arquivo_url:null});
-      }
-    }
-    // 3. Criar status_mcti
-    await api("/rest/v1/status_mcti","POST",{cliente_slug:slug,status:"nao_enviado"});
-    // 4. Criar emails_permitidos
-    for(var j=0;j<wiz.emails.length;j++){
-      var em=wiz.emails[j];
-      await api("/rest/v1/emails_permitidos","POST",{email:em.email,cliente_slug:slug,parceiro_slug:em.parceiro});
-    }
-    // 5. Recarregar lista
-    await loadAllClientes();
-    result.innerHTML='<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso com template de atividades! Acesse a aba Cronogramas para editar.</div>';
-    btn.textContent="Criado ✓";
-    setTimeout(function(){switchTab("cronograma");var sel=document.getElementById("client-select");sel.value=slug;loadClient();},2000);
-  }catch(e){
-    result.innerHTML='<div class="error-box">Erro ao criar: '+e.message+'</div>';
-    btn.disabled=false;btn.textContent="Tentar novamente";
-  }
+async function criarProjeto(){ 
+    var btn = document.getElementById("btn-create-final"); 
+    var result = document.getElementById("create-result"); 
+    btn.disabled = true; 
+    btn.textContent = "Criando..."; 
+    
+    var slug = wiz.nome.toLowerCase().replace(/\s+/g,"-").replace(/[^a-z0-9-]/g,"")+"-"+wiz.anoBase; 
+    var nomeCompleto = wiz.nome+" "+wiz.anoBase; 
+
+    try { 
+        // 1. Estruturando as etapas e os itens baseados no template
+        var payload_etapas = [];
+        var payload_itens = [];
+
+        for(var i = 0; i < wiz.etapas.length; i++) {
+            var e = wiz.etapas[i];
+            var ordemEtapa = i + 1;
+            
+            payload_etapas.push({
+                cliente_slug: slug, ordem: ordemEtapa, nome: e.nome, periodo: e.periodo, status: "pending", grupo: e.grupo, observacao: ""
+            });
+
+            var tpl = TEMPLATE_ITENS[e.grupo];
+            if(tpl) {
+                for(var a = 0; a < tpl.atividades.length; a++){
+                    payload_itens.push({cliente_slug: slug, etapa_ordem: ordemEtapa, tipo: "atividade", nome: tpl.atividades[a], status: "pending", ordem: a+1});
+                }
+                for(var d = 0; d < tpl.documentos.length; d++){
+                    payload_itens.push({cliente_slug: slug, etapa_ordem: ordemEtapa, tipo: "documento", nome: tpl.documentos[d].nome, status: "pending", ordem: d+1});
+                }
+            }
+        }
+
+        // 2. Montando o Payload Único que será enviado para a sua Function do Supabase
+        var payload = {
+            p_cliente: { nome: nomeCompleto, ano_base: parseInt(wiz.anoBase), slug: slug, empresa_slug: wiz.empresaSlug },
+            p_etapas: payload_etapas,
+            p_itens: payload_itens,
+            p_emails: wiz.emails,
+            p_status_mcti: { cliente_slug: slug, status: "nao_enviado" }
+        };
+
+        // 3. Chamada Única para a API (acionando a nova rota RPC)
+        await api("/rest/v1/rpc/criar_projeto_completo", "POST", payload); 
+
+        // 4. Feedback de Sucesso
+        await loadAllClientes(); 
+        result.innerHTML = '<div class="success-box">Projeto "'+nomeCompleto+'" criado com sucesso! Acesse a aba Cronogramas para editar.</div>'; 
+        btn.textContent = "Criado ✓"; 
+        
+        setTimeout(function(){
+            switchTab("cronograma");
+            var sel = document.getElementById("client-select");
+            sel.value = slug;
+            loadClient();
+        }, 2000); 
+
+    } catch(e) { 
+        // Se der erro aqui, nada foi salvo no banco, garantindo a integridade dos dados!
+        result.innerHTML = '<div class="error-box">Erro ao criar: '+e.message+'</div>'; 
+        btn.disabled = false; 
+        btn.textContent = "Tentar novamente"; 
+    } 
 }
 
 // ===== EDIÇÃO DE ATIVIDADES NA ABA CRONOGRAMAS =====
