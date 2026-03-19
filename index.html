@@ -521,11 +521,10 @@ async function loadClient(){
         var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
         window.itensCache = itens; // Salva globalmente para os cálculos de data funcionarem
 
-  try{
-    var etapas=await api("/rest/v1/etapas?cliente_slug=eq."+slug+"&order=ordem.asc");
-    var itens=await api("/rest/v1/itens?cliente_slug=eq."+slug+"&order=ordem.asc");
+  
     var atividades=itens.filter(function(i){return i.tipo==="atividade";});
     var documentos=itens.filter(function(i){return i.tipo==="documento";});
+  
     var totalAtiv=atividades.length;
     var doneAtiv=atividades.filter(function(a){return a.status==="done";}).length;
     var pct=totalAtiv?Math.round(doneAtiv/totalAtiv*100):0;
