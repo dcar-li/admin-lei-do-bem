@@ -556,7 +556,7 @@ body{background:var(--bg);color:var(--text);min-height:100vh;font-family:'Inter'
 
 <script>
 const SUPABASE_URL = "https://ywckzclxdbhlbgqpmtvc.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Y2t6Y2x4ZGJobGJncXBtdHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzgwNTksImV4cCI6MjA4OTI1NDA1OX0.Cfxbis5sgn2pT7mnULlEfqW1In1OmDBxUUTHsP3H3OgY";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl3Y2t6Y2x4ZGJobGJncXBtdHZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM2NzgwNTksImV4cCI6MjA4OTI1NDA1OX0.Cfxbis5sgn2pT7mnULlEfqW1In1OmDBxUUTHsP3H3Og";
 
 var accessToken = sessionStorage.getItem("admin_token") || null;
 var allClientes = [];
@@ -1463,11 +1463,83 @@ async function updateActivityLogic(itemId,campo,valor){
 
 // RESTAURA SESSÃO
 (async function(){
+  // Intercepta redirect do Supabase (reset de senha ou magic link)
+  var hash = window.location.hash;
+  if(hash){
+    var params = {};
+    hash.replace(/^#/,"").split("&").forEach(function(p){
+      var kv=p.split("="); params[decodeURIComponent(kv[0])]=decodeURIComponent(kv[1]||"");
+    });
+
+    // Erro no link (expirado, já usado, etc.)
+    if(params.error){
+      document.getElementById("login-screen").style.display="flex";
+      var err=document.getElementById("login-err");
+      var msg=params.error_description||params.error;
+      if(msg.includes("expired"))msg="O link de redefinição expirou. Solicite um novo abaixo.";
+      else if(msg.includes("invalid"))msg="Link inválido. Solicite um novo abaixo.";
+      err.textContent=msg.replace(/\+/g," ");
+      err.style.display="block";
+      window.history.replaceState(null,"",window.location.pathname);
+      return;
+    }
+
+    // Link válido com access_token — mostra formulário de nova senha
+    if(params.access_token && params.type==="recovery"){
+      accessToken=params.access_token;
+      window.history.replaceState(null,"",window.location.pathname);
+      showResetForm(accessToken);
+      return;
+    }
+  }
+
+  // Sessão normal
   if(accessToken){
     try{await api("/rest/v1/parceiros?select=slug&limit=1");await initAdmin();}
     catch(e){accessToken=null;sessionStorage.removeItem("admin_token");}
   }
 })();
+
+function showResetForm(token){
+  document.getElementById("login-screen").style.display="flex";
+  // Substitui o card de login por formulário de nova senha
+  var card=document.querySelector(".login-card");
+  card.innerHTML=
+    '<div class="login-logo"><img src="https://ywckzclxdbhlbgqpmtvc.supabase.co/storage/v1/object/public/template/logos/DC_logo_cor.png" alt="DCarli" style="height:52px;object-fit:contain"/></div>'+
+    '<div class="login-logo-divider"><div class="login-logo-divider-line"></div><div class="login-logo-divider-text">Nova senha</div><div class="login-logo-divider-line"></div></div>'+
+    '<div class="login-title">Redefinir senha</div>'+
+    '<div class="login-sub">Digite sua nova senha de acesso.</div>'+
+    '<label class="login-label">Nova senha</label>'+
+    '<input class="login-input" type="password" id="new-pass" placeholder="Mínimo 6 caracteres" onkeydown="if(event.key===\'Enter\')doSetNewPassword()"/>'+
+    '<label class="login-label">Confirmar senha</label>'+
+    '<input class="login-input" type="password" id="new-pass-conf" placeholder="Repita a senha" onkeydown="if(event.key===\'Enter\')doSetNewPassword()"/>'+
+    '<div class="login-err" id="reset-form-err" style="display:none"></div>'+
+    '<div class="login-reset-ok" id="reset-form-ok" style="display:none">Senha alterada! Redirecionando...</div>'+
+    '<button class="login-btn" onclick="doSetNewPassword()">Salvar nova senha</button>';
+  window._resetToken=token;
+}
+
+async function doSetNewPassword(){
+  var pass=document.getElementById("new-pass").value;
+  var conf=document.getElementById("new-pass-conf").value;
+  var err=document.getElementById("reset-form-err");
+  var ok=document.getElementById("reset-form-ok");
+  err.style.display="none";
+  if(pass.length<6){err.textContent="Mínimo de 6 caracteres.";err.style.display="block";return;}
+  if(pass!==conf){err.textContent="As senhas não coincidem.";err.style.display="block";return;}
+  try{
+    var res=await fetch(SUPABASE_URL+"/auth/v1/user",{
+      method:"PUT",
+      headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+(window._resetToken||accessToken),"Content-Type":"application/json"},
+      body:JSON.stringify({password:pass})
+    });
+    if(!res.ok)throw new Error("Erro ao salvar.");
+    ok.style.display="block";
+    setTimeout(function(){
+      window.location.href=window.location.pathname;
+    },2000);
+  }catch(e){err.textContent=e.message;err.style.display="block";}
+}
 </script>
 </body>
 </html>
